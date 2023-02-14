@@ -94,6 +94,8 @@ class WeatherMachine
         $amplitude = 0;    // changing this amplitude affects the top and bottom limits.
                         // Increasing this var expands the temp range both ways. Reducing it does the opposite.
         $plus = 0;      // This factor adds a plus.
+
+        $deviation = 0;
         
         $timeDivider = 6; // Since the system has been designed to work with units of 7 days and the seasons have 42 days (6 weeks), this is
                           // an important factor. If the seasons's length ever changes, you can tune it here.
@@ -101,7 +103,8 @@ class WeatherMachine
         switch($locationType)
         {
             case 1: // Plains / meadows
-                $tunning = 12; $amplitude = 2.6; // 21 to 85 F, -6 to 29 C. - Deviation should go a lil bit up and down. - Night and day changes are small.
+                $tunning = 12; $amplitude = 2.6; $plus = 0; // 21 to 85 F, -6 to 29 C. - Deviation should go a lil bit up and down. - Night and day changes are small.
+                $deviation = 2;
                 break;
             case 2: // Jungles 
                 $tunning = 23; $amplitude = 0.3; // 68 to 77 F, 20 to 25 C. - Deviation should only go up. - Night and day changes are small.
@@ -119,7 +122,7 @@ class WeatherMachine
                 $tunning = 23; $amplitude = 1.1; $plus = 0; // 15 to 30 C, 59 to 86 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
                 break;
             case 7: // Tundra
-                $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes are moderate.
+                $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
                 break;
             case 8: // Canyon
                 $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
@@ -128,9 +131,12 @@ class WeatherMachine
                 $tunning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
                 break;
             case 10: // Taiga
-
-        }
-        
+                $tunning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
+                break;
+            case 11: // Tundra (deep)
+                $tunning = 1; $amplitude = 2.4; $plus = -12; // -27 to 5 C, -16 to 41 F. - Deviation should be minimal. - Night and day changes don't exist (it's either always day or night).
+                break;
+        }        
         
         $temperature = (int)($tunning + ($amplitude * $season / $timeDivider) + $plus);
 
