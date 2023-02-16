@@ -164,8 +164,8 @@ class WeatherMachine
                 break;
             case 6: // Swamps
                 $tunning = 23; $amplitude = 1.1; $plus = 0; // 15 to 30 C, 59 to 86 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
-                $topLimits =    [];
-                $bottomLimits = [];
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
                 break;
             case 7: // Tundra
                 $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
@@ -198,7 +198,9 @@ class WeatherMachine
     }
 
     private function CalcAverageTempBySeason(int $season, int $locationType, string $dayStage)
-    {        
+    {
+        // NOTE: Temperatures are in C here. For a F value there needs to be a conversion step.
+
         $timeDivider = 6; // Since the system has been designed to work with units of 7 days and the seasons have 42 days (6 weeks), this is
                           // an important factor. If the seasons's length ever changes, you can tune it here.
         
