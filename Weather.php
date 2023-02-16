@@ -71,23 +71,61 @@ The new weather is set based on the previous humidity and new temperature.
 The new humidity is based on the new weather and new temperature. (if it rains, you get more humidity. If not, it all depends...)
 The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water. If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
 
-
+DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'night']
 
 */
 // - - - [ TEST ] - - -
 
 
+readonly class TemperatureParameters
+{
+    public function __construct(public int $tunning, public int $amplitude, public int $plus, public int $topLimits, public int $bottomLimits)
+    {
+        
+    }
+}
+
 class WeatherMachine
 {
-    public function CalcTemperature($season, Location $location)
+    public function CalcTemperature($season, Location $location, $dayStage)
     {        
-        $temperature = $this->CalcTempBySeason($season, $location->GetLocationType(), $location->GetWeather());
+        $temperature = $this->CalcAverageTempBySeason($season, $location->GetLocationType(), $dayStage);
         
     }
 
-    private function CalcTempBySeason(int $season, int $locationType, int $weather)
+    private function ReturnIndexByDayStage(string $dayStage)
     {
-        // This part calculates the average temperatures.
+        switch($dayStage)
+        {
+            case 'midnight':
+                $indexToReturn = 0;
+                break;
+            case 'night':
+                $indexToReturn = 1;
+                break;
+            case 'dawn':
+                $indexToReturn = 2;
+                break;
+            case 'morning':
+                $indexToReturn = 3;
+                break;
+            case 'midday':
+                $indexToReturn = 4;
+                break;
+            case 'afternoon':
+                $indexToReturn = 5;
+                break;
+            case 'evening':
+                $indexToReturn = 6;
+                break;
+        }
+
+        return $indexToReturn;
+    }
+
+    private function SetParamsByLocation($locationType)
+    {
+        // This part calculates the average temperatures by Location.
 
         $tunning = 0;  // changing this amplitude affects the top and bottom limits.
                         // Increasing this var moves the range to the positive side. Reducing it does the opposite.
@@ -95,50 +133,91 @@ class WeatherMachine
                         // Increasing this var expands the temp range both ways. Reducing it does the opposite.
         $plus = 0;      // This factor adds a plus.
 
-        $deviation = 0;
-        
-        $timeDivider = 6; // Since the system has been designed to work with units of 7 days and the seasons have 42 days (6 weeks), this is
-                          // an important factor. If the seasons's length ever changes, you can tune it here.
-        
+        // ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening']
+
         switch($locationType)
         {
             case 1: // Plains / meadows
-                $tunning = 12; $amplitude = 2.6; $plus = 0; // 21 to 85 F, -6 to 29 C. - Deviation should go a lil bit up and down. - Night and day changes are small.
-                $deviation = 2;
+                $tunning = 12; $amplitude = 2.6; $plus = 0; // -6 to 29 C, 21 to 85 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
                 break;
             case 2: // Jungles 
-                $tunning = 23; $amplitude = 0.3; // 68 to 77 F, 20 to 25 C. - Deviation should only go up. - Night and day changes are small.
+                $tunning = 23; $amplitude = 0.3; $plus = 0; // 20 to 25 C, 68 to 77 F. - Deviation should only go up. - Night and day changes are small.
+                $topLimits =    [-2, -1, 0, 1, 2, 3, 2];
+                $bottomLimits = [-3, -2, -1, 0, 1, 2, 1];
                 break;
             case 3: // Woods / forests
-                $tunning = 11; $amplitude = 2.30; $plus = -3; // 17 to 73 F, -8 to 23 C. - Deviation should go a lil bit up and down. - Night and day changes are mild.
+                $tunning = 11; $amplitude = 2.30; $plus = -3; //  -8 to 23 C, 17 to 73 F. - Deviation should go a lil bit up and down. - Night and day changes are mild.
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
                 break;
             case 4: // Deserts 
                 $tunning = 19; $amplitude = 1; $plus = 0; // 53 to 77 F, 12 to 25 C. - Deviation should go a lil bit up and down. - Night and day changes are HUGE.
+                $topLimits =    [-10, -7, -4, 0, 7, 10, 4];
+                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3];
                 break;
             case 5: // Mountains
                 $tunning = 19; $amplitude = 1; $plus = 0; // Same as deserts... For now.
+                $topLimits =    [-10, -7, -4, 0, 7, 10, 4];
+                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3];
                 break;
             case 6: // Swamps
                 $tunning = 23; $amplitude = 1.1; $plus = 0; // 15 to 30 C, 59 to 86 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
+                $topLimits =    [];
+                $bottomLimits = [];
                 break;
             case 7: // Tundra
                 $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
+                $topLimits =    [];
+                $bottomLimits = [];
                 break;
             case 8: // Canyon
                 $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
+                $topLimits =    [];
+                $bottomLimits = [];
                 break;
             case 9: // Lake
                 $tunning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
+                $topLimits =    [];
+                $bottomLimits = [];
                 break;
             case 10: // Taiga
                 $tunning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
+                $topLimits =    [];
+                $bottomLimits = [];
                 break;
             case 11: // Tundra (deep)
                 $tunning = 1; $amplitude = 2.4; $plus = -12; // -27 to 5 C, -16 to 41 F. - Deviation should be minimal. - Night and day changes don't exist (it's either always day or night).
+                $topLimits =    [];
+                $bottomLimits = [];
                 break;
-        }        
+        }
+
+        return new TemperatureParameters($tunning, $amplitude, $plus, $topLimits, $bottomLimits);
+    }
+
+    private function CalcAverageTempBySeason(int $season, int $locationType, string $dayStage)
+    {        
+        $timeDivider = 6; // Since the system has been designed to work with units of 7 days and the seasons have 42 days (6 weeks), this is
+                          // an important factor. If the seasons's length ever changes, you can tune it here.
         
-        $temperature = (int)($tunning + ($amplitude * $season / $timeDivider) + $plus);
+        // ------------------------------------------------------ [ INDEX TO USE BY STAGE OF THE DAY ]
+
+        $index = $this->ReturnIndexByDayStage($dayStage);
+
+        // ------------------------------------------------------ [ PARAMS TO USE BY LOCATION ]
+                
+        $params = $this->SetParamsByLocation($locationType); // In order to see the values of the parameters, check the function.
+
+        $tunning = $params->tunning; $amplitude = $params->amplitude; $plus = $params->plus;
+        $topLimits = $params->topLimits[$index]; $bottomLimits = $params->bottomLimits[$index];
+        
+        // ------------------------------------------------------ [ CALCULATIONS ]
+        
+        $averageTemperature = (int)($tunning + ($amplitude * $season / $timeDivider) + $plus);
+
+        $temperature = rand(($averageTemperature+$bottomLimits), ($averageTemperature+$topLimits));
 
         return $temperature;
         // Most data gathered from https://earthobservatory.nasa.gov/biome/
