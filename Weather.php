@@ -79,7 +79,7 @@ DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'even
 
 readonly class TemperatureParameters
 {
-    public function __construct(public int $tunning, public int $amplitude, public int $plus, public array $topLimits, public array $bottomLimits)
+    public function __construct(public float $tunning, public float $amplitude, public int $plus, public array $topLimits, public array $bottomLimits)
     {
         
     }
@@ -91,6 +91,7 @@ class WeatherMachine
     {        
         $temperature = $this->CalcAverageTempBySeason($season, $location->GetLocationType(), $dayStage);
         
+        echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
     }
 
     private function ReturnIndexByDayStage(string $dayStage)
@@ -221,7 +222,6 @@ class WeatherMachine
 
         $temperature = rand(($averageTemperature+$bottomLimits), ($averageTemperature+$topLimits));
 
-        echo "Temperature: " . $temperature . "C\n";
         return $temperature;
         // Most data gathered from https://earthobservatory.nasa.gov/biome/
     }
@@ -319,6 +319,8 @@ class Location
 $newLocation = new Location(1, 1, 1, 1, 1, 1, 100);
 $weatherMachine = new WeatherMachine();
 
+$weatherMachine->CalcTemperature(-13,$newLocation,'midday');
+$weatherMachine->CalcTemperature(-13,$newLocation,'midday');
 $weatherMachine->CalcTemperature(-13,$newLocation,'midday');
 
 echo $newLocation;
