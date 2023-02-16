@@ -79,7 +79,7 @@ DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'even
 
 readonly class TemperatureParameters
 {
-    public function __construct(public int $tunning, public int $amplitude, public int $plus, public int $topLimits, public int $bottomLimits)
+    public function __construct(public int $tunning, public int $amplitude, public int $plus, public array $topLimits, public array $bottomLimits)
     {
         
     }
@@ -169,8 +169,8 @@ class WeatherMachine
                 break;
             case 7: // Tundra
                 $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
-                $topLimits =    [];
-                $bottomLimits = [];
+                $topLimits =    [1,1,1,1,1,1,1];
+                $bottomLimits = [1,1,1,1,1,1,1];
                 break;
             case 8: // Canyon
                 $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
@@ -221,6 +221,7 @@ class WeatherMachine
 
         $temperature = rand(($averageTemperature+$bottomLimits), ($averageTemperature+$topLimits));
 
+        echo "Temperature: " . $temperature . "C\n";
         return $temperature;
         // Most data gathered from https://earthobservatory.nasa.gov/biome/
     }
@@ -316,6 +317,9 @@ class Location
 }
 
 $newLocation = new Location(1, 1, 1, 1, 1, 1, 100);
+$weatherMachine = new WeatherMachine();
+
+$weatherMachine->CalcTemperature(-13,$newLocation,'midday');
 
 echo $newLocation;
 
