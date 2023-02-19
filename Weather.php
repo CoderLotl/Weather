@@ -69,27 +69,63 @@ Now the weather starts as clear, the temperature as an average point for a seaso
 Based on that, the new temperature is set depending on the previous weather and season, and location type.
 The new weather is set based on the previous humidity and new temperature.
 The new humidity is based on the new weather and new temperature. (if it rains, you get more humidity. If not, it all depends...)
-The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water. If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
+The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water.
+ If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
 
 DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'night']
 
+WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
+
 */
-// - - - [ TEST ] - - -
+// - - - [ CLASSES ] - - -
 
 
-readonly class TemperatureParameters
+class TemperatureParameters
 {
-    public function __construct(public float $tunning, public float $amplitude, public int $plus, public array $topLimits, public array $bottomLimits)
+    private $tunning;
+    private $amplitude;
+    private $plus;
+    private $topLimits;
+    private $bottomLimits;
+
+    public function __construct(float $tunning, float $amplitude, int $plus, array $topLimits, array $bottomLimits)
     {
-        
+        $this->tunning = $tunning;
+        $this->amplitude = $amplitude;
+        $this->plus = $plus;
+        $this->topLimits = $topLimits;
+        $this->bottomLimits = $bottomLimits;        
     }
+
+    public function GetTunning()
+    {
+        return $this->tunning;
+    }
+    public function GetAmplitude()
+    {
+        return $this->amplitude;
+    }
+    public function GetPlus()
+    {
+        return $this->plus;
+    }
+    public function GetTopLimits($index)
+    {
+        return $this->topLimits[$index];
+    }
+    public function GetBottomLimits($index)
+    {
+        return $this->bottomLimits[$index];
+    }
+
 }
 
 class WeatherMachine
 {
-    public function CalcTemperature($season, Location $location, $dayStage)
+    public function SetNewTemperature($season, Location $location, $dayStage)
     {        
-        $temperature = $this->CalcAverageTempBySeason($season, $location->GetLocationType(), $dayStage);
+        $temperature = $this->CalcNewTemperature($season, $location->GetLocationType(), $dayStage, $location->GetWeather());
+        $location->SetTemperature($temperature);
         
         echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
     }
@@ -171,34 +207,34 @@ class WeatherMachine
             case 7: // Tundra
                 $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
                 $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [1,1,1,1,1,1,1];
+                $bottomLimits = [1,1,1,1,1,1,1]; // NOTE: from this point on, everything's a filler because idk what numbers to use D:
                 break;
             case 8: // Canyon
                 $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
-                $topLimits =    [];
-                $bottomLimits = [];
+                $topLimits =    [1,1,1,1,1,1,1];
+                $bottomLimits = [1,1,1,1,1,1,1];
                 break;
             case 9: // Lake
                 $tunning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
-                $topLimits =    [];
-                $bottomLimits = [];
+                $topLimits =    [1,1,1,1,1,1,1];
+                $bottomLimits = [1,1,1,1,1,1,1];
                 break;
             case 10: // Taiga
                 $tunning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
-                $topLimits =    [];
-                $bottomLimits = [];
+                $topLimits =    [1,1,1,1,1,1,1];
+                $bottomLimits = [1,1,1,1,1,1,1];
                 break;
             case 11: // Tundra (deep)
                 $tunning = 1; $amplitude = 2.4; $plus = -12; // -27 to 5 C, -16 to 41 F. - Deviation should be minimal. - Night and day changes don't exist (it's either always day or night).
-                $topLimits =    [];
-                $bottomLimits = [];
+                $topLimits =    [1,1,1,1,1,1,1];
+                $bottomLimits = [1,1,1,1,1,1,1];
                 break;
         }
 
         return new TemperatureParameters($tunning, $amplitude, $plus, $topLimits, $bottomLimits);
     }
 
-    private function CalcAverageTempBySeason(int $season, int $locationType, string $dayStage)
+    private function CalcNewTemperature(int $season, int $locationType, string $dayStage, $weather)
     {
         // NOTE: Temperatures are in C here. For a F value there needs to be a conversion step.
 
@@ -213,30 +249,70 @@ class WeatherMachine
                 
         $params = $this->SetParamsByLocation($locationType); // In order to see the values of the parameters, check the function.
 
-        $tunning = $params->tunning; $amplitude = $params->amplitude; $plus = $params->plus;
-        $topLimits = $params->topLimits[$index]; $bottomLimits = $params->bottomLimits[$index];
+        $tunning = $params->GetTunning(); $amplitude = $params->GetAmplitude(); $plus = $params->GetAmplitude();
+        $topLimits = $params->GetTopLimits($index); $bottomLimits = $params->GetBottomLimits($index);
         
+        // ------------------------------------------------------ [ WEATHER EFFECT'S PARAM ]
+
+        $weatherEffect = $this->SetTempReductionParameterByWeather($weather);
+
         // ------------------------------------------------------ [ CALCULATIONS ]
         
         $averageTemperature = (int)($tunning + ($amplitude * $season / $timeDivider) + $plus);
 
-        $temperature = rand(($averageTemperature+$bottomLimits), ($averageTemperature+$topLimits));
+        $temperature = rand( ( $averageTemperature + $bottomLimits ), ( $averageTemperature + $topLimits ) );
+
+        $temperature = ( $temperature + ( ( $temperature * $weatherEffect ) / 100 ) );
 
         return $temperature;
         // Most data gathered from https://earthobservatory.nasa.gov/biome/
+    }
+
+    private function SetTempReductionParameterByWeather($weather)
+    {
+        switch($weather)
+        {
+            // WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
+            case -2:
+                $param = 0;
+                break;
+            case -1:
+                $param = 0;
+                break;
+            case 0:
+                $param = 0;
+                break;
+            case 1:
+                $param = 0;
+                break;
+            case 2:
+                $param = 0;
+                break;
+            case 3:
+                $param = 0;
+                break;
+            case 4:
+                $param = 0;
+                break;
+            case 5:
+                $param = 0;
+                break;
+        }
+
+        return $param;
     }
 }
 
 class Location
 {
     // - - - ATTRIBUTES
-    private int $locationID;    // Discretional
-    private int $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: tundra. 8: canyon. 9: lake. 10: taiga. 11: tundra (deep)
-    private int $weather;       // -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.
-    private int $clouds;        // Int from 0 to 10.
-    private int $humidity;      //
-    private int $temperature;   //
-    private int $localWater;    //
+    private $locationID;    // Discretional
+    private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: tundra. 8: canyon. 9: lake. 10: taiga. 11: tundra (deep)
+    private $weather;       // -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.
+    private $clouds;        // Int from 0 to 10.
+    private $humidity;      //
+    private $temperature;   //
+    private $localWater;    //
     
 
     // - - - CONSTRUCTOR
@@ -285,7 +361,7 @@ class Location
     {
         $clouds = $this->TranslateCloudsValue();
 
-        return "Location ID: {$this->locationID}\nSky: {$clouds}";
+        return "Location ID: {$this->locationID}\nSky: {$clouds}\nTemperature: {$this->temperature}";
     }
 
     private function TranslateCloudsValue()
@@ -316,19 +392,20 @@ class Location
     }
 }
 
+// - - - - - - - - - - -
+// - - - [ TEST ] - - - * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// - - - - - - - - - - -
+
 $newLocation = new Location(1, 1, 1, 1, 1, 1, 100);
 $weatherMachine = new WeatherMachine();
 
-$weatherMachine->CalcTemperature(-13,$newLocation,'midday');
-$weatherMachine->CalcTemperature(-13,$newLocation,'midday');
-$weatherMachine->CalcTemperature(-13,$newLocation,'midday');
+$weatherMachine->SetNewTemperature(-13,$newLocation,'midday');
+$weatherMachine->SetNewTemperature(-13,$newLocation,'midday');
+$weatherMachine->SetNewTemperature(-13,$newLocation,'midday');
 
 echo $newLocation;
 
 // - - - - - - - - -
-
-
-
 
 
 
