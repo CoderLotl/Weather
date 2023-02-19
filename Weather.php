@@ -411,6 +411,3 @@ echo $newLocation;
 
 
 
-
-
-
