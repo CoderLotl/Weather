@@ -164,11 +164,11 @@ class WeatherMachine
     {
         // This part calculates the average temperatures by Location.
 
-        $tunning = 0;  // changing this amplitude affects the top and bottom limits.
-                        // Increasing this var moves the range to the positive side. Reducing it does the opposite.
-        $amplitude = 0;    // changing this amplitude affects the top and bottom limits.
-                        // Increasing this var expands the temp range both ways. Reducing it does the opposite.
-        $plus = 0;      // This factor adds a plus.
+        $tunning = 0;       // changing this amplitude affects the top and bottom limits.
+                            // Increasing this var moves the range to the positive side. Reducing it does the opposite.
+        $amplitude = 0;     // changing this amplitude affects the top and bottom limits.
+                            // Increasing this var expands the temp range both ways. Reducing it does the opposite.
+        $plus = 0;          // This factor adds a plus.
 
         // ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening']
 
@@ -204,30 +204,30 @@ class WeatherMachine
                 $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
                 $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
                 break;
-            case 7: // Tundra
+            case 7: // Canyon
+                $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
+                $topLimits =    [-7, -6, -5, 0, 4, 5, 4];
+                $bottomLimits = [-10, -7, -3, 0, 4, 6, 2];
+                break;
+            case 8: // Lake
+                $tunning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
+                $topLimits =    [-5, -4, -5, 0, 4, 5, 4];
+                $bottomLimits = [-8, -5, -3, 0, 4, 6, 2];
+                break;
+            case 9: // Taiga
+                $tunning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                break;
+            case 10: // Tundra
                 $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
                 $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [1,1,1,1,1,1,1]; // NOTE: from this point on, everything's a filler because idk what numbers to use D:
-                break;
-            case 8: // Canyon
-                $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
-                $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [1,1,1,1,1,1,1];
-                break;
-            case 9: // Lake
-                $tunning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
-                $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [1,1,1,1,1,1,1];
-                break;
-            case 10: // Taiga
-                $tunning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
-                $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [1,1,1,1,1,1,1];
+                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0];
                 break;
             case 11: // Tundra (deep)
                 $tunning = 1; $amplitude = 2.4; $plus = -12; // -27 to 5 C, -16 to 41 F. - Deviation should be minimal. - Night and day changes don't exist (it's either always day or night).
                 $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [1,1,1,1,1,1,1];
+                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0];
                 break;
         }
 
@@ -307,7 +307,7 @@ class Location
 {
     // - - - ATTRIBUTES
     private $locationID;    // Discretional
-    private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: tundra. 8: canyon. 9: lake. 10: taiga. 11: tundra (deep)
+    private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
     private $weather;       // -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.
     private $clouds;        // Int from 0 to 10.
     private $humidity;      //
