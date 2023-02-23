@@ -72,7 +72,7 @@ The new humidity is based on the new weather and new temperature. (if it rains, 
 The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water.
  If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
 
-DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'night']
+DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night']
 
 WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
 
@@ -155,6 +155,9 @@ class WeatherMachine
             case 'evening':
                 $indexToReturn = 6;
                 break;
+            case 'dusk':
+                $indexToReturn = 7;
+                break;
         }
 
         return $indexToReturn;
@@ -176,58 +179,58 @@ class WeatherMachine
         {
             case 1: // Plains / meadows
                 $tunning = 12; $amplitude = 2.6; $plus = 0; // -6 to 29 C, 21 to 85 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 1, 0];
                 break;
             case 2: // Jungles 
                 $tunning = 23; $amplitude = 0.3; $plus = 0; // 20 to 25 C, 68 to 77 F. - Deviation should only go up. - Night and day changes are small.
-                $topLimits =    [-2, -1, 0, 1, 2, 3, 2];
-                $bottomLimits = [-3, -2, -1, 0, 1, 2, 1];
+                $topLimits =    [-2, -1, 0, 1, 2, 3, 3, 2];
+                $bottomLimits = [-3, -2, -1, 0, 1, 2, 2, 1];
                 break;
             case 3: // Woods / forests
                 $tunning = 11; $amplitude = 2.30; $plus = -3; //  -8 to 23 C, 17 to 73 F. - Deviation should go a lil bit up and down. - Night and day changes are mild.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 1, 0];
                 break;
             case 4: // Deserts 
                 $tunning = 19; $amplitude = 1; $plus = 0; // 53 to 77 F, 12 to 25 C. - Deviation should go a lil bit up and down. - Night and day changes are HUGE.
-                $topLimits =    [-10, -7, -4, 0, 7, 10, 4];
-                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3];
+                $topLimits =    [-10, -7, -4, 0, 7, 10,10, 4];
+                $bottomLimits = [-14, -10, -5, 0, 5, 7, 7, 3];
                 break;
             case 5: // Mountains
                 $tunning = 19; $amplitude = 1; $plus = 0; // Same as deserts... For now.
-                $topLimits =    [-10, -7, -4, 0, 7, 10, 4];
-                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3];
+                $topLimits =    [-10, -7, -4, 0, 7, 10,10, 4];
+                $bottomLimits = [-14, -10, -5, 0, 5, 7, 7, 3];
                 break;
             case 6: // Swamps
                 $tunning = 23; $amplitude = 1.1; $plus = 0; // 15 to 30 C, 59 to 86 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 1, 0];
                 break;
             case 7: // Canyon
                 $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
-                $topLimits =    [-7, -6, -5, 0, 4, 5, 4];
-                $bottomLimits = [-10, -7, -3, 0, 4, 6, 2];
+                $topLimits =    [-7, -6, -5, 0, 4, 5, 5, 4];
+                $bottomLimits = [-10, -7, -3, 0, 4, 6, 6, 2];
                 break;
             case 8: // Lake
                 $tunning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
-                $topLimits =    [-5, -4, -5, 0, 4, 5, 4];
-                $bottomLimits = [-8, -5, -3, 0, 4, 6, 2];
+                $topLimits =    [-5, -4, -5, 0, 4, 5, 5, 4];
+                $bottomLimits = [-8, -5, -3, 0, 4, 6, 6, 2];
                 break;
             case 9: // Taiga
                 $tunning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 2, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 1, 0];
                 break;
             case 10: // Tundra
                 $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
-                $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0];
+                $topLimits =    [1, 1, 1, 1, 1, 1, 1, 1];
+                $bottomLimits = [-6, -4, -3, -1, 0, 1, 1, 0];
                 break;
             case 11: // Tundra (deep)
                 $tunning = 1; $amplitude = 2.4; $plus = -12; // -27 to 5 C, -16 to 41 F. - Deviation should be minimal. - Night and day changes don't exist (it's either always day or night).
-                $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0];
+                $topLimits =    [1, 1, 1, 1, 1, 1, 1, 1];
+                $bottomLimits = [-6, -4, -3, -1, 0, 1, 1, 0];
                 break;
         }
 
