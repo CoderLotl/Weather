@@ -1,7 +1,7 @@
 <?php
 
 /*
-*   NOTES:
+*   // - - - [ NOTES ] - - -
 *
 *   - To add: humidity, seasons, precipitation.
 *   
@@ -25,72 +25,59 @@
 - If the air gets too cold, too, humidity condensates before even forming clouds and falls to the ground. So rains increase the immediate humidity, but 
     in the long term help to reduce it since the air cools with the rain.
 - Also the more dry the air is, the more the water droplets evaporate before reaching the ground. The opposite happens when the air is moister. 
-
 So if the season is cold, it's probable that you may get more clouds and more rain than in a hot season, but cloudy days are less prone to produce rain when it's cold than when it's hot.
 */
 
 /*
-
-SEASON: it could be just a number that drifts from -10 to 10, instead of a rough change.
-
+SEASON: it could be just a number that drifts from -10 to 10, instead of a rough change. NOTE: it actually drifts from -42 to 42. (!!!)
 tentative:
-
 humidity for cloud formation:
-
 - hot season: 70%.
 -- 60 for slow.
 -- humidity increases really fast.
 -- humidity decreases really slow.
 -- increased chance of rain when it's cloudy (which is rarer than in cold season). This is due to higher humidity.
-
 ** reduced chance of rain overall due to requiring high humidity for raining in order to compensate with the hot weather. (not a mechanic, just an observation)
     If the place has a lot of water, rains would be common. Otherwise, the hot seasons could experiment few rains.
     If the place is too dry it could be hellish in hot seasons.
-
 ==============================================================
-
 - cold season: 30%.
 -- 20 for slow.
 -- humidity increases really slow.
 -- humidity decreases really fast.
 -- reduced chance of rain when it's cloudy (which is more common than in hot season). This is due to lower humidity.
-
 ** increased chance of rain overall due to requiring cold weather for raining in order to compensate with the low humidity. (not a mechanic, just an observation)
     If the place has a lot of water, cold seasons could be a hell of rains. Otherwise it would be fine.
     If the place is too dry it could experiment... Snow?...
-
 ==============================================================
-
 +++ rain always reduces temperature.
 +++ rain always increases humidity.
 
 Now the weather starts as clear, the temperature as an average point for a season = 0, the same with humidity (except you want some specific value). The local water starts at whatever you want.
 
 Based on that, the new temperature is set depending on the previous weather and season, and location type.
-The new weather is set based on the previous humidity and new temperature.
+The new weather is set based on the previous humidity and clouds and new temperature.
 The new humidity is based on the new weather and new temperature. (if it rains, you get more humidity. If not, it all depends...)
 The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water.
- If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
+If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
 
-DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'night']
-
+DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night']
 WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
-
 */
 // - - - [ CLASSES ] - - -
 
 
 class TemperatureParameters
 {
-    private $tunning;
+    private $tuning;
     private $amplitude;
     private $plus;
     private $topLimits;
     private $bottomLimits;
 
-    public function __construct(float $tunning, float $amplitude, int $plus, array $topLimits, array $bottomLimits)
+    public function __construct(float $tuning, float $amplitude, int $plus, array $topLimits, array $bottomLimits)
     {
-        $this->tunning = $tunning;
+        $this->tuning = $tuning;
         $this->amplitude = $amplitude;
         $this->plus = $plus;
         $this->topLimits = $topLimits;
@@ -99,7 +86,7 @@ class TemperatureParameters
 
     public function GetTunning()
     {
-        return $this->tunning;
+        return $this->tuning;
     }
     public function GetAmplitude()
     {
@@ -123,11 +110,41 @@ class TemperatureParameters
 class WeatherMachine
 {
     public function SetNewTemperature($season, Location $location, $dayStage)
-    {        
+    {
+        // CALCULATING AND SETTING THE NEW TEMPERATURE
         $temperature = $this->CalcNewTemperature($season, $location->GetLocationType(), $dayStage, $location->GetWeather());
         $location->SetTemperature($temperature);
         
+        // CALCULATING AND SETTING THE NEW WEATHER
+        $weather = $this->CalcNewWeather($location);
+
+        // PRINTING TO THE CONSOLE
         echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
+    }
+
+    private function CalcNewWeather(Location $location)
+    {
+        /*
+        Weather depends on: the clouds variable, the temp, and the humidity
+
+        [ CLOUDS ] -> more cloude = more chances of rain ~ Clouds go from 0 to 10.
+
+        [0 = clear. 1-2 fair. 3-4 few clouds. 5-6 fairly clouded. 7-8 clouded. 9-10 heavily clouded.]
+
+        If there are no clouds (0), only dew could happen. Otherwise it could be sunny or very sunny.
+        If the sky is fair to a few clouds (1 to 4), it could be either sunny or be a light rain. Chances of rain increase if there are a few clouds.
+        If it's fairly clouded to clouded (5 to 8), only from not raining to rain. Chances of rain increase if it's clouded. Clouded also allows downpour.
+        If it's heavily clouded, only from not raining to downpour.
+
+        [ TEMP AND HUMIDITY ]
+        The higher the temp, the harder it's to get rain.
+        The higher the humidity, the easier it's to get rain.
+        
+        So the higher the humidity, the more chances of getting rain. The lower the humidity, the less chances of getting rain.
+        The higher the temp, the less chances of getting rain. The lower the temp, the higher chances of getting rain.
+
+        */
+        
     }
 
     private function ReturnIndexByDayStage(string $dayStage)
@@ -155,6 +172,9 @@ class WeatherMachine
             case 'evening':
                 $indexToReturn = 6;
                 break;
+            case 'dusk':
+                $indexToReturn = 7;
+                break;
         }
 
         return $indexToReturn;
@@ -164,74 +184,74 @@ class WeatherMachine
     {
         // This part calculates the average temperatures by Location.
 
-        $tunning = 0;       // changing this amplitude affects the top and bottom limits.
+        $tuning = 0;       // changing this amplitude affects the top and bottom limits.
                             // Increasing this var moves the range to the positive side. Reducing it does the opposite.
         $amplitude = 0;     // changing this amplitude affects the top and bottom limits.
                             // Increasing this var expands the temp range both ways. Reducing it does the opposite.
         $plus = 0;          // This factor adds a plus.
 
-        // ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening']
+        // ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk']
 
         switch($locationType)
         {
             case 1: // Plains / meadows
-                $tunning = 12; $amplitude = 2.6; $plus = 0; // -6 to 29 C, 21 to 85 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $tuning = 12; $amplitude = 2.6; $plus = 0; // -6 to 29 C, 21 to 85 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0, 0];
                 break;
             case 2: // Jungles 
-                $tunning = 23; $amplitude = 0.3; $plus = 0; // 20 to 25 C, 68 to 77 F. - Deviation should only go up. - Night and day changes are small.
-                $topLimits =    [-2, -1, 0, 1, 2, 3, 2];
-                $bottomLimits = [-3, -2, -1, 0, 1, 2, 1];
+                $tuning = 23; $amplitude = 0.3; $plus = 0; // 20 to 25 C, 68 to 77 F. - Deviation should only go up. - Night and day changes are small.
+                $topLimits =    [-2, -1, 0, 1, 2, 3, 2, 2];
+                $bottomLimits = [-3, -2, -1, 0, 1, 2, 1, 1];
                 break;
             case 3: // Woods / forests
-                $tunning = 11; $amplitude = 2.30; $plus = -3; //  -8 to 23 C, 17 to 73 F. - Deviation should go a lil bit up and down. - Night and day changes are mild.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $tuning = 11; $amplitude = 2.30; $plus = -3; //  -8 to 23 C, 17 to 73 F. - Deviation should go a lil bit up and down. - Night and day changes are mild.
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0, 0];
                 break;
             case 4: // Deserts 
-                $tunning = 19; $amplitude = 1; $plus = 0; // 53 to 77 F, 12 to 25 C. - Deviation should go a lil bit up and down. - Night and day changes are HUGE.
-                $topLimits =    [-10, -7, -4, 0, 7, 10, 4];
-                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3];
+                $tuning = 19; $amplitude = 1; $plus = 0; // 53 to 77 F, 12 to 25 C. - Deviation should go a lil bit up and down. - Night and day changes are HUGE.
+                $topLimits =    [-10, -7, -4, 0, 7, 10, 4, 4];
+                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3, 3];
                 break;
             case 5: // Mountains
-                $tunning = 19; $amplitude = 1; $plus = 0; // Same as deserts... For now.
-                $topLimits =    [-10, -7, -4, 0, 7, 10, 4];
-                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3];
+                $tuning = 19; $amplitude = 1; $plus = 0; // Same as deserts... For now.
+                $topLimits =    [-10, -7, -4, 0, 7, 10, 4, 4];
+                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3, 3];
                 break;
             case 6: // Swamps
-                $tunning = 23; $amplitude = 1.1; $plus = 0; // 15 to 30 C, 59 to 86 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $tuning = 23; $amplitude = 1.1; $plus = 0; // 15 to 30 C, 59 to 86 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0, 0];
                 break;
             case 7: // Canyon
-                $tunning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
-                $topLimits =    [-7, -6, -5, 0, 4, 5, 4];
-                $bottomLimits = [-10, -7, -3, 0, 4, 6, 2];
+                $tuning = 15; $amplitude = 2.7; $plus = 0; // -3 to 32 C, 26.6 to 91.4 F. - Deviation should go a lil bit up and down. - Night and day changes are BIG (down to 10 or even less C).
+                $topLimits =    [-7, -6, -5, 0, 4, 5, 4, 4];
+                $bottomLimits = [-10, -7, -3, 0, 4, 6, 2, 2];
                 break;
             case 8: // Lake
-                $tunning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
-                $topLimits =    [-5, -4, -5, 0, 4, 5, 4];
-                $bottomLimits = [-8, -5, -3, 0, 4, 6, 2];
+                $tuning = 6.2; $amplitude = 2.4; $plus = 0; // -10 to 22 C, 14 to 71 F. - Deviation should go a somewhat up and down. - Night and day changes are mild.
+                $topLimits =    [-5, -4, -5, 0, 4, 5, 4, 4];
+                $bottomLimits = [-8, -5, -3, 0, 4, 6, 2, 2];
                 break;
             case 9: // Taiga
-                $tunning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1];
-                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0];
+                $tuning = 1; $amplitude = 1; $plus = 0; // -6 to 7 C, 21 to 44 F. - Deviation should be minimal. - Night and day changes are big, but only in the night's way.
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1, 1];
+                $bottomLimits = [-4, -3, -2, -1, 0, 1, 0, 0];
                 break;
             case 10: // Tundra
-                $tunning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
-                $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0];
+                $tuning = 1; $amplitude = 2.4; $plus = -2; // -17 to 15 C, 1.4 to 59 F. - Deviation should go up and down. Night and day changes don't exist (it's either always day or night).
+                $topLimits =    [1, 1, 1, 1, 1, 1, 1, 1];
+                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0, 0];
                 break;
             case 11: // Tundra (deep)
-                $tunning = 1; $amplitude = 2.4; $plus = -12; // -27 to 5 C, -16 to 41 F. - Deviation should be minimal. - Night and day changes don't exist (it's either always day or night).
-                $topLimits =    [1,1,1,1,1,1,1];
-                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0];
+                $tuning = 1; $amplitude = 2.4; $plus = -12; // -27 to 5 C, -16 to 41 F. - Deviation should be minimal. - Night and day changes don't exist (it's either always day or night).
+                $topLimits =    [1, 1, 1, 1, 1, 1, 1, 1];
+                $bottomLimits = [-6, -4, -3, -1, 0, 1, 0, 0];
                 break;
         }
 
-        return new TemperatureParameters($tunning, $amplitude, $plus, $topLimits, $bottomLimits);
+        return new TemperatureParameters($tuning, $amplitude, $plus, $topLimits, $bottomLimits);
     }
 
     private function CalcNewTemperature(int $season, int $locationType, string $dayStage, $weather)
@@ -249,16 +269,16 @@ class WeatherMachine
                 
         $params = $this->SetParamsByLocation($locationType); // In order to see the values of the parameters, check the function.
 
-        $tunning = $params->GetTunning(); $amplitude = $params->GetAmplitude(); $plus = $params->GetAmplitude();
+        $tuning = $params->GetTunning(); $amplitude = $params->GetAmplitude(); $plus = $params->GetAmplitude();
         $topLimits = $params->GetTopLimits($index); $bottomLimits = $params->GetBottomLimits($index);
         
         // ------------------------------------------------------ [ WEATHER EFFECT'S PARAM ]
 
-        $weatherEffect = $this->SetTempReductionParameterByWeather($weather);
+        $weatherEffect = $this->SetTempModificationParameterByWeather($weather);
 
         // ------------------------------------------------------ [ CALCULATIONS ]
         
-        $averageTemperature = (int)($tunning + ($amplitude * $season / $timeDivider) + $plus);
+        $averageTemperature = (int)($tuning + ($amplitude * $season / $timeDivider) + $plus);
 
         $temperature = rand( ( $averageTemperature + $bottomLimits ), ( $averageTemperature + $topLimits ) );
 
@@ -268,7 +288,7 @@ class WeatherMachine
         // Most data gathered from https://earthobservatory.nasa.gov/biome/
     }
 
-    private function SetTempReductionParameterByWeather($weather)
+    private function SetTempModificationParameterByWeather($weather)
     {
         switch($weather)
         {
@@ -308,7 +328,7 @@ class Location
     // - - - ATTRIBUTES
     private $locationID;    // Discretional
     private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
-    private $weather;       // -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.
+    private $weather;       // [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
     private $clouds;        // Int from 0 to 10.
     private $humidity;      //
     private $temperature;   //
@@ -407,7 +427,71 @@ echo $newLocation;
 
 // - - - - - - - - -
 
+// - - - [ DOCUMENTATION ] - - -
+/*
+
+The weather system is controlled by the class WeatherMachine, which has no constructor and only 1 public function.
+
+The calculation of weather requires of several external variables:
+
+- SEASON: a number that goes from -42 to 42. This range can be changed, but requires a proper adjustment of the system's maths, which is explained here.
+- DAY STAGE: a string. The system currently has 8 day stages. The amount of stages can be set higher or lower, but requires a proper adjustment of a set of arrays, together with a switch.
+- LOCATION: the location structure is given with this system.
 
 
 
+
+[ INSIDE WORK OF THE WEATHER MACHINE]
+
+TEMPERATURE, controlled by the class WeatherMachine
+
+The temperature depends on 3 main variables: the season factor, the stage of the day, and the type of location.
+The equations that determine the temperature, at first, are these:
+
+        $averageTemperature = (int)($tuning + ($amplitude * $season / $timeDivider) + $plus);
+
+        $temperature = rand( ( $averageTemperature + $bottomLimits ), ( $averageTemperature + $topLimits ) );
+
+        $temperature = ( $temperature + ( ( $temperature * $weatherEffect ) / 100 ) );
+
+
+To understand this, we have to take the 1st equation of the 3, and keep in mind that the equation is a function in the mathematical sense.
+
+[ 1st EQUATION ]
+
+The AMPLITUDE will define the width of the numerical domain of our function. The TUNING will define how much to the left (the negative numbers area) or to the right (the positives) the domain is.
+
+The TIME DIVIDER is a variable that's defined by the length of units each season lasts.
+The original system was developed for a system of 7 days per season. Since the seasons were later extended to 42 days each (that's 6 weeks. 7 * 6), the only way to adjust the maths back to
+the original design was to define the season length at 42, and add the $timeDivider, setting it to 6. - If you ever want to adapt this system to a different length for the seasons, keep this in mind.
+
+The SEASON is the absolute domain of numbers. That means: it's the total range the equation is going to take as max and min numbers.
+Originally it was of 7 days per season, so the range for SEASON used to go from -7, to 7 (from cold season to warm season). Now it's of -42 to 42.
+If you want to adapt the system to a different range of time per season, keep in mind that this has to keep some relation with the $timeDivider.
+
+The PLUS variable is used discretionally and for correcting the numbers manually in a desired way whenever the need arises. Normally its value is 0, but you can set it to whatever.
+
+With all this, the 1st equation returns the $averageTemperature.
+
+- - -
+
+[ 2nd EQUATION ]
+
+The 2nd equation corresponds to the deviation of temperature given the DAY STAGE and the LOCATION TYPE.
+The LOCATION TYPE would switch between different arrays of numbers (one for the bottom limit of the deviation, one for the top limit) that are the collections of deviations, at reason of one per DAY STAGE.
+The DAY STAGE would indicate the index of such arrays.
+
+So the $temperature would be a random number between ( $averageTemperature + $bottomLimits ) and ( $averageTemperature + $topLimits ).
+Both $bottomLimits and $topLimits are set by GetTopLimits($index) and GetBottomLimits($index), both functions from the class TemperatureParameters, which return the value of the array at the specified index.
+
+The INDEX, by the way, is obtained by the function ReturnIndexByDayStage($dayStage), which returns the index given the DAY STAGE (a string).
+
+- - -
+
+[ 3rd EQUATION ]
+
+The final equation is simply summing the temperature with a modifyer, which may be either positive or negative, and it's a percentage of the current temperature set by the current weather.
+
+
+*/
 
