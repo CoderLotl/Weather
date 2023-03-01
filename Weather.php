@@ -53,13 +53,18 @@ humidity for cloud formation:
 +++ rain always reduces temperature.
 +++ rain always increases humidity.
 
-Now the weather starts as clear, the temperature as an average point for a season = 0, the same with humidity (except you want some specific value). The local water starts at whatever you want.
+0. - Now the weather starts as clear, the temperature as an average point for a season = 0, the same with humidity (except you want some specific value).
+     The local water starts at whatever you want.
 
-Based on that, the new temperature is set depending on the previous weather and season, and location type.
-The new weather is set based on the previous humidity and clouds and new temperature.
-The new humidity is based on the new weather and new temperature. (if it rains, you get more humidity. If not, it all depends...)
-The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water.
-If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
+1. - Based on that, the new temperature is set depending on the previous weather and season, and location type.
+
+2. - The new humidity is based on the new temperature.
+
+3. - The new weather is set based on the humidity and clouds and new temperature.
+
+4. - The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water.
+
+5. - If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
 
 DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night']
 WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
@@ -122,8 +127,20 @@ class WeatherMachine
         echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
     }
 
+    private function CalcAbsoluteHumidity(Location $location)
+    {
+        
+    }
+
     private function CalcNewWeather(Location $location)
     {
+        $clouds = $location->GetClouds();
+        $temperature = $location->GetTemperature();
+        
+        //$humidity = $location->GetHumidity();
+        //$saturationPoint = 0;
+
+        //$saturationPoint = ($temperature * 17.625) / ($temperature + 243.04);
         /*
         Weather depends on: the clouds variable, the temp, and the humidity
 
@@ -330,20 +347,20 @@ class Location
     private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
     private $weather;       // [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
     private $clouds;        // Int from 0 to 10.
-    private $humidity;      //
+    private $waterVapor;      //
     private $temperature;   //
     private $localWater;    //
     
 
     // - - - CONSTRUCTOR
 
-    public function __construct(int $locationID, int $locationType, int $weather, int $clouds, int $humidity, Int $temperature, int $localWater)
+    public function __construct(int $locationID, int $locationType, int $weather, int $clouds, int $waterVapor, Int $temperature, int $localWater)
     {
         $this->locationID = $locationID;
         $this->locationType = $locationType;
         $this->weather = $weather;
         $this->clouds = $clouds;
-        $this->humidity = $humidity;
+        $this->waterVapor = $waterVapor;
         $this->temperature = $temperature;
         $this->localWater = $localWater;
     }
@@ -358,7 +375,7 @@ class Location
     {
         $this->temperature = $temperature;
     }
-    public function GetTemperature($temperature)
+    public function GetTemperature()
     {
         return $this->temperature;
     }
@@ -373,6 +390,22 @@ class Location
     public function GetWeather()
     {
         return $this->weather;
+    }
+    public function SetClouds($clouds)
+    {
+        $this->clouds = $clouds;
+    }
+    public function GetClouds()
+    {
+        return $this->clouds;
+    }
+    public function SetWaterVapor($waterVapor)
+    {
+        $this->waterVapor = $waterVapor;
+    }
+    public function GetWaterVapor()
+    {
+        return $this->waterVapor;
     }
 
 
