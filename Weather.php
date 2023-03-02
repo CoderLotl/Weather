@@ -124,17 +124,17 @@ class WeatherMachine
         $weather = $this->CalcNewWeather($location);
 
         // PRINTING TO THE CONSOLE
-        echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
+        //echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
     }
 
-    private function CalcSaturationPoint($temperature)
+    public function CalcSaturationPoint($temperature)
     {
         $baseEquation = 8.07131 - 1730.63 / (233.426 + $temperature);
 
         return number_format( pow(10, $baseEquation), 3, '.', '' );
     }
 
-    private function CalcRelativeHumidity(Location $location)
+    public function CalcRelativeHumidity(Location $location)
     {
         $waterVapor = $location->GetWaterVapor();
 
@@ -142,7 +142,7 @@ class WeatherMachine
 
         $saturationPoint = $this->CalcSaturationPoint($temperature);
         
-        return $waterVapor / $saturationPoint * 100;
+        return number_format( ($waterVapor / $saturationPoint * 100 ), 3, '.', '' );
     }
 
 
@@ -179,14 +179,6 @@ class WeatherMachine
         If the sky is fair to a few clouds (1 to 4), it could be either sunny or be a light rain. Chances of rain increase if there are a few clouds.
         If it's fairly clouded to clouded (5 to 8), only from not raining to rain. Chances of rain increase if it's clouded. Clouded also allows downpour.
         If it's heavily clouded, only from not raining to downpour.
-
-        [ TEMP AND HUMIDITY ]
-        The higher the temp, the harder it's to get rain.
-        The higher the humidity, the easier it's to get rain.
-        
-        So the higher the humidity, the more chances of getting rain. The lower the humidity, the less chances of getting rain.
-        The higher the temp, the less chances of getting rain. The lower the temp, the higher chances of getting rain.
-
         */
         
     }
@@ -440,8 +432,12 @@ class Location
     public function __toString()
     {
         $clouds = $this->TranslateCloudsValue();
+        $weatherMachine = new WeatherMachine();
+        $relativeHumidity = $weatherMachine->CalcRelativeHumidity($this);
+        $saturationPoint = $weatherMachine->CalcSaturationPoint($this->temperature); // . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n
 
-        return "Location ID: {$this->locationID}\nSky: {$clouds}\nTemperature: {$this->temperature}";
+        return "Location ID: {$this->locationID}\nSky: {$clouds}\nTemperature: {$this->temperature}C | " . ((($this->temperature * 9) / 5) + 32) . "F"
+        . "\nWater Vapor: {$this->waterVapor} g/m3   |   Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%";
     }
 
     private function TranslateCloudsValue()
@@ -478,12 +474,16 @@ class Location
 
 $newLocation = new Location(1, 1, 1, 1, 1, 1, 100);
 $weatherMachine = new WeatherMachine();
+$season = -13;
 
-$weatherMachine->SetNewTemperature(-13,$newLocation,'midday');
-$weatherMachine->SetNewTemperature(-13,$newLocation,'midday');
-$weatherMachine->SetNewTemperature(-13,$newLocation,'midday');
+for($i = 0; $i < 3; $i ++)
+{
+    echo "Try " . $i+1 . "\n\n";
+    $weatherMachine->SetNewTemperature($season, $newLocation, 'midday');
+    echo $newLocation . "\n-------\n";
+    $season+= 10;
+}
 
-echo $newLocation;
 
 // - - - - - - - - -
 
