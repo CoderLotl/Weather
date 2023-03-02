@@ -134,7 +134,7 @@ class WeatherMachine
         return number_format( pow(10, $baseEquation), 3, '.', '' );
     }
 
-    private function CalcAbsoluteHumidity(Location $location)
+    private function CalcRelativeHumidity(Location $location)
     {
         $waterVapor = $location->GetWaterVapor();
 
@@ -151,6 +151,19 @@ class WeatherMachine
         $clouds = $location->GetClouds();
         $temperature = $location->GetTemperature();
         
+        $relativeHumidity = $this->CalcRelativeHumidity($location);
+
+        if($relativeHumidity >= 100)
+        {
+            // rain or something
+        }
+        else
+        {
+            // else
+        }
+
+
+
         //$humidity = $location->GetHumidity();
         //$saturationPoint = 0;
 
