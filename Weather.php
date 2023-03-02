@@ -58,9 +58,9 @@ humidity for cloud formation:
 
 1. - Based on that, the new temperature is set depending on the previous weather and season, and location type.
 
-2. - The new humidity is based on the new temperature.
+2. - The new weather is set based on the humidity and clouds and new temperature.
 
-3. - The new weather is set based on the humidity and clouds and new temperature.
+3. - The new humidity is based on the new temperature and weather.
 
 4. - The new local water is based on the change of humidity and weather (if the humidity goes down because of condensation, you get more local water.
 
@@ -127,10 +127,24 @@ class WeatherMachine
         echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
     }
 
+    private function CalcSaturationPoint($temperature)
+    {
+        $baseEquation = 8.07131 - 1730.63 / (233.426 + $temperature);
+
+        return number_format( pow(10, $baseEquation), 3, '.', '' );
+    }
+
     private function CalcAbsoluteHumidity(Location $location)
     {
+        $waterVapor = $location->GetWaterVapor();
+
+        $temperature = $location->GetTemperature();
+
+        $saturationPoint = $this->CalcSaturationPoint($temperature);
         
+        return $waterVapor / $saturationPoint * 100;
     }
+
 
     private function CalcNewWeather(Location $location)
     {
