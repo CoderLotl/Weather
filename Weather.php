@@ -127,6 +127,20 @@ class WeatherMachine
         //echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
     }
 
+    public function CalcSaturationPointTemp(Location $location)
+    {
+        $temperature = $location->GetTemperature();
+        $relativeHumidity = $this->CalcRelativeHumidity($location);
+        $a = 17.27;
+        $b = 237.7;
+
+        $member = log($relativeHumidity/100) + $a*$temperature / ($b + $temperature);
+
+        $saturationPointTemp = ($b * $member) / ($a - $member);
+
+        return (int)$saturationPointTemp;
+    }
+
     public function CalcSaturationPoint($temperature)
     {
         $baseEquation = 8.07131 - 1730.63 / (233.426 + $temperature);
@@ -434,10 +448,12 @@ class Location
         $clouds = $this->TranslateCloudsValue();
         $weatherMachine = new WeatherMachine();
         $relativeHumidity = $weatherMachine->CalcRelativeHumidity($this);
-        $saturationPoint = $weatherMachine->CalcSaturationPoint($this->temperature); // . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n
+        $saturationPoint = $weatherMachine->CalcSaturationPoint($this->temperature);
+        $saturationPointTemp = $weatherMachine->CalcSaturationPointTemp($this);
 
-        return "Location ID: {$this->locationID}\nSky: {$clouds}\nTemperature: {$this->temperature}C | " . ((($this->temperature * 9) / 5) + 32) . "F"
-        . "\nWater Vapor: {$this->waterVapor} g/m3   |   Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%";
+        return "Location ID: {$this->locationID}\nSky: {$clouds}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
+        . "\nWater Vapor: {$this->waterVapor} g/m3 | Water Vapor Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%" . 
+        " | Saturation Temp for this humidity: {$saturationPointTemp}°C";
     }
 
     private function TranslateCloudsValue()
