@@ -71,6 +71,145 @@ WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rai
 */
 // - - - [ CLASSES ] - - -
 
+class SeasonControl
+{
+    private $day;
+    private $goingForward;
+
+    public function __construct(int $day, bool $goingForward)
+    {
+        $this->day = $day;
+        $this->goingForward = $goingForward;
+    }
+
+    public function GetDay()
+    {
+        return $this->day;
+    }
+    public function SetDay(int $value)
+    {
+        $this->day = $value;
+    }
+    public function GetGoingForward()
+    {
+        return $this->goingForward;
+    }
+    public function SetGoingForward(bool $value)
+    {
+        $this->goingForward = $value;
+    }
+
+    public function Tick()
+    {
+        if($this->goingForward == true)
+        {
+            if($this->day != 42)
+            {
+                $this->day++;
+            }
+            else
+            {
+                $this->goingForward = false;
+                $this->day--;
+            }
+        }
+        else
+        {
+            if($this->day != -42)
+            {
+                $this->day--;
+            }
+            else
+            {
+                $this->goingForward = true;
+                $this->goingForward++;
+            }
+        }
+    }
+
+    public function CustomTick(int $amountOfDays)
+    {
+        $previousDay = $this->day;
+        if($amountOfDays >= 0) // IF THE VALUE IS POSITIVE
+        {
+            if($this->goingForward == true) // ... AND THE YEAR IS GOING FORWARD
+            {
+                if( ($this->day + $amountOfDays) <= 42)
+                {
+                    $this->day += $amountOfDays;
+                    if($this->day == 42)
+                    {
+                        $this->goingForward = false;
+                    }
+                }
+                else // IF THERE'S AN EXCESS ... THE YEAR IS GOING TO GO BACKWARDS AFTER THIS.
+                {
+                    $excess = ($this->day + $amountOfDays) - 42;
+                    $this->day = 42 - $excess;
+                    $this->goingForward = false;
+                }
+            }
+            else // ... ELSE, IF THE YEAR IS GOING BACKWARDS...
+            {
+                if( ($this->day - $amountOfDays) >= -42)
+                {
+                    $this->day -= $amountOfDays;
+                    if($this->day == -42)
+                    {
+                        $this->goingForward = true;
+                    }
+                }
+                else
+                {
+                    $excess = ($this->day - $amountOfDays) + 42;
+                    $this->day = -42 - $excess;
+                    $this->goingForward = true;
+                }
+            }
+        }
+
+        elseif($amountOfDays <=0) // IF THE VALUE IS NEGATIVE
+        {
+            if($this->goingForward == true) // ... AND THE YEAR IS GOING FORWARD
+            {
+                if( ($this->day + $amountOfDays) >= -42)
+                {
+                    $this->day += $amountOfDays;
+                    /*if($this->day == -42)
+                    {
+                        $this->goingForward = true;
+                    }*/
+                }
+                else // IF THERE'S AN EXCESS ... THE YEAR IS GOING TO GO BACKWARDS AFTER THIS.
+                {
+                    $excess = ($this->day + $amountOfDays) + 42;
+                    $this->day = -42 - $excess;
+                    $this->goingForward = false;
+                }
+            }
+            else // ... ELSE, IF THE YEAR IS GOING BACKWARDS...
+            {
+                if( ($this->day - $amountOfDays) <= 42)
+                {
+                    $this->day -= $amountOfDays;
+                    if($this->day == 42)
+                    {
+                        $this->goingForward = true;
+                    }
+                }
+                else
+                {
+                    $excess = ($this->day - $amountOfDays) - 42;
+                    $this->day = -42 - $excess;
+                    $this->goingForward = true;
+                }
+            }
+        }
+
+        echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer' : 'Winter') . "\n";
+    }
+}
+
 
 class TemperatureParameters
 {
@@ -490,14 +629,14 @@ class Location
 
 $newLocation = new Location(1, 1, 1, 1, 1, 1, 100);
 $weatherMachine = new WeatherMachine();
-$season = -13;
+$seasonControl = new SeasonControl(27,true);
 
 for($i = 0; $i < 3; $i ++)
 {
     echo "Try " . $i+1 . "\n\n";
-    $weatherMachine->SetNewTemperature($season, $newLocation, 'midday');
-    echo $newLocation . "\n-------\n";
-    $season+= 10;
+    $seasonControl->CustomTick(13);
+    $weatherMachine->SetNewTemperature($seasonControl->GetDay(), $newLocation, 'midday');
+    echo $newLocation . "\n-------\n";    
 }
 
 
