@@ -73,15 +73,18 @@ WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rai
 
 class SeasonControl
 {
+    // - - - ATTRIBUTES
     private $day;
     private $goingForward;
 
+    // - - - CONSTRUCTOR
     public function __construct(int $day, bool $goingForward)
     {
         $this->day = $day;
         $this->goingForward = $goingForward;
     }
 
+    // - - - PROPERTIES
     public function GetDay()
     {
         return $this->day;
@@ -99,6 +102,7 @@ class SeasonControl
         $this->goingForward = $value;
     }
 
+    // - - - METHODS
     public function Tick()
     {
         if($this->goingForward == true)
@@ -206,7 +210,29 @@ class SeasonControl
             }
         }
 
-        echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer' : 'Winter') . "\n";
+        echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
+    }
+
+    public function ReturnSeason()
+    {
+        if( ($this->day >= 22 && $this->goingForward == true) || ($this->day >= 21 && $this->goingForward == false) )
+        {
+            $season = "Summer";
+        }
+        elseif( ($this->day >= -20 && $this->day <= 21) && $this->goingForward == true)
+        {
+            $season = "Spring";
+        }
+        elseif( ($this->day <= 20 && $this->day >= -21) && $this->goingForward == false)
+        {
+            $season = "Fall";
+        }
+        else
+        {
+            $season = "Winter"; // Winter goes from -22 , up to -42, to -21 again.
+        }
+        
+        return $season;
     }
 }
 
@@ -525,7 +551,6 @@ class Location
     
 
     // - - - CONSTRUCTOR
-
     public function __construct(int $locationID, int $locationType, int $weather, int $clouds, int $waterVapor, Int $temperature, int $localWater)
     {
         $this->locationID = $locationID;
@@ -538,7 +563,6 @@ class Location
     }
 
     // - - - PROPERTIES
-
     public function GetID()
     {
         return $this->locationID;
@@ -595,6 +619,7 @@ class Location
         " | Saturation Temp for this humidity: {$saturationPointTemp}°C";
     }
 
+    // - - - METHODS
     private function TranslateCloudsValue()
     {
         $returnValue = "";
@@ -632,8 +657,10 @@ $weatherMachine = new WeatherMachine();
 $seasonControl = new SeasonControl(27,true);
 
 for($i = 0; $i < 3; $i ++)
-{
+{    
     echo "Try " . $i+1 . "\n\n";
+    $season = $seasonControl->ReturnSeason();
+    echo "Season: " . $season . "\n";
     $seasonControl->CustomTick(13);
     $weatherMachine->SetNewTemperature($seasonControl->GetDay(), $newLocation, 'midday');
     echo $newLocation . "\n-------\n";    
