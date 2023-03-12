@@ -76,12 +76,10 @@ class SeasonControl
     // - - - ATTRIBUTES
     private $day;
     private $goingForward;
-
+    
     // - - - CONSTRUCTOR
-    public function __construct(int $day, bool $goingForward)
-    {
-        $this->day = $day;
-        $this->goingForward = $goingForward;
+    public function __construct()
+    {     
     }
 
     // - - - PROPERTIES
@@ -103,8 +101,9 @@ class SeasonControl
     }
 
     // - - - METHODS
-    public function Tick()
-    {
+    public function Tick(WeatherSystemDataAccess $WeatherSystemdataAccess)
+    {        
+        $previousDay = $this->day;
         if($this->goingForward == true)
         {
             if($this->day != 42)
@@ -129,9 +128,11 @@ class SeasonControl
                 $this->goingForward++;
             }
         }
+        echo 'Previous day: ' . $previousDay . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
+        $WeatherSystemdataAccess->WriteSeasonDataToDB($this);
     }
 
-    public function CustomTick(int $amountOfDays)
+    public function CustomTick(int $amountOfDays, WeatherSystemDataAccess $WeatherSystemdataAccess)
     {
         $previousDay = $this->day;
         if($amountOfDays >= 0) // IF THE VALUE IS POSITIVE
@@ -179,10 +180,6 @@ class SeasonControl
                 if( ($this->day + $amountOfDays) >= -42)
                 {
                     $this->day += $amountOfDays;
-                    /*if($this->day == -42)
-                    {
-                        $this->goingForward = true;
-                    }*/
                 }
                 else // IF THERE'S AN EXCESS ... THE YEAR IS GOING TO GO BACKWARDS AFTER THIS.
                 {
@@ -210,10 +207,11 @@ class SeasonControl
             }
         }
 
+        $WeatherSystemdataAccess->WriteSeasonDataToDB($this);
         echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
     }
 
-    public function ReturnSeason()
+    public function ReturnSeasonAsString()
     {
         if( ($this->day >= 22 && $this->goingForward == true) || ($this->day >= 21 && $this->goingForward == false) )
         {
@@ -230,14 +228,13 @@ class SeasonControl
         else
         {
             $season = "Winter"; // Winter goes from -22 , up to -42, to -21 again.
-        }
-        
+        }        
         return $season;
-    }
+    }    
 }
 
 
-class TemperatureParameters
+class TemperatureParameters // This is a package-class, used only to store and move data.
 {
     private $tuning;
     private $amplitude;
@@ -277,9 +274,98 @@ class TemperatureParameters
 
 }
 
+class WeatherSystemDataAccess
+{
+    private $DBPath;
+
+    public function __construct(string $DBPath)
+    {
+        $this->DBPath = $DBPath;
+    }
+
+    public function GetDBPath()
+    {
+        return $this->DBPath;
+    }
+
+    public function ReadSeasonDataFromDB()
+    {
+        $seasonControl = new SeasonControl();
+
+        $db = new SQLite3($this->DBPath);
+
+        $data = $db->query('SELECT Day, GoingForward FROM SeasonControl');
+        $data = $data->fetchArray();
+        
+        $seasonControl->SetDay($data['Day']);        
+        
+        if($data["GoingForward"] == 0)
+        {
+            $seasonControl->SetGoingForward(false);
+        }
+        else
+        {
+            $seasonControl->SetGoingForward(true);
+        }        
+        //echo 'Day: ' . $this->day . ' | Moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak');
+        return $seasonControl;
+    }
+
+    public function WriteSeasonDataToDB(SeasonControl $seasonControl)
+    {
+        $db = new SQLite3($this->DBPath);
+
+        $day = $seasonControl->GetDay();
+        if($seasonControl->GetGoingForward() == false)
+        {
+            $goingForward = 0;
+        }
+        else
+        {
+            $goingForward = 1;
+        }        
+
+        $command = "UPDATE SeasonControl SET Day = {$day}, GoingForward = {$goingForward}";
+
+        $db->query($command);
+    }
+    
+    public function ReadLocationDataFromDB()
+    {
+        $locationArray = array();
+        $db = new SQLite3($this->DBPath);
+
+        $data = $db->query('SELECT * FROM Locations');
+
+        while($row = $data->fetchArray())
+        {            
+            $location = new Location($row['LocationID'], $row['LocationType'], $row['Weather'], $row['Clouds'], $row['WaterVapor'], $row['Temperature'], $row['LocalWater']);            
+            array_push($locationArray, $location);
+        }
+
+        return $locationArray;        
+    }
+
+    public function WriteLocationDataToDB(Location $location)
+    {
+        $db = new SQLite3($this->DBPath);
+
+        $locationID = $location->GetID();
+        $locationType = $location->GetLocationType();
+        $weather = $location->GetWeather();
+        $clouds = $location->GetClouds();
+        $waterVapor = $location->GetWaterVapor();
+        $temperature = $location->GetTemperature();
+        $localWater = $location->GetLocalWater();
+
+        $command = "UPDATE Locations SET LocationID = {$locationID}, LocationType = {$locationType}, Weather = {$weather}, Clouds = {$clouds}, WaterVapor = {$waterVapor}, Temperature = {$temperature}, LocalWater = {$localWater} WHERE LocationID = {$locationID}";
+        $db->query($command);
+    }
+}
+
 class WeatherMachine
 {
-    public function SetNewTemperature($season, Location $location, $dayStage)
+    public function ExecuteWeatherTick($season, Location $location, $dayStage, WeatherSystemDataAccess $WeatherSystemdataAccess)
     {
         // CALCULATING AND SETTING THE NEW TEMPERATURE
         $temperature = $this->CalcNewTemperature($season, $location->GetLocationType(), $dayStage, $location->GetWeather());
@@ -288,8 +374,7 @@ class WeatherMachine
         // CALCULATING AND SETTING THE NEW WEATHER
         $weather = $this->CalcNewWeather($location);
 
-        // PRINTING TO THE CONSOLE
-        //echo "Temperature: " . $temperature . "C | " . ((($temperature * 9) / 5) + 32) . "F\n";
+        $WeatherSystemdataAccess->WriteLocationDataToDB($location);
     }
 
     public function CalcSaturationPointTemp(Location $location)
@@ -341,12 +426,6 @@ class WeatherMachine
             // else
         }
 
-
-
-        //$humidity = $location->GetHumidity();
-        //$saturationPoint = 0;
-
-        //$saturationPoint = ($temperature * 17.625) / ($temperature + 243.04);
         /*
         Weather depends on: the clouds variable, the temp, and the humidity
 
@@ -544,11 +623,10 @@ class Location
     private $locationID;    // Discretional
     private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
     private $weather;       // [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
-    private $clouds;        // Int from 0 to 10.
-    private $waterVapor;      //
-    private $temperature;   //
-    private $localWater;    //
-    
+    private $clouds;        // The amount of clouds in a range of of int that goes from 0 to 10.
+    private $waterVapor;      // Amount of water in gaseous form. This is the Absolute Humidity.
+    private $temperature;   // The location's current ambience temperature.
+    private $localWater;    // The amount of water in liquid state at the location. Rivers, pools, lakes, whatever.    
 
     // - - - CONSTRUCTOR
     public function __construct(int $locationID, int $locationType, int $weather, int $clouds, int $waterVapor, Int $temperature, int $localWater)
@@ -563,45 +641,61 @@ class Location
     }
 
     // - - - PROPERTIES
+    public function SetID($value)
+    {
+        $this->locationID = $value;
+    }
     public function GetID()
     {
         return $this->locationID;
     }
-    public function SetTemperature($temperature)
+    public function SetTemperature($value)
     {
-        $this->temperature = $temperature;
+        $this->temperature = $value;
     }
     public function GetTemperature()
     {
         return $this->temperature;
     }
+    public function SetLocationType($value)
+    {
+        $this->locationType = $value;
+    }
     public function GetLocationType()
     {
         return $this->locationType;
     }
-    public function SetWeather($weather)
+    public function SetWeather($value)
     {
-        $this->weather = $weather;
+        $this->weather = $value;
     }
     public function GetWeather()
     {
         return $this->weather;
     }
-    public function SetClouds($clouds)
+    public function SetClouds($value)
     {
-        $this->clouds = $clouds;
+        $this->clouds = $value;
     }
     public function GetClouds()
     {
         return $this->clouds;
     }
-    public function SetWaterVapor($waterVapor)
+    public function SetWaterVapor($value)
     {
-        $this->waterVapor = $waterVapor;
+        $this->waterVapor = $value;
     }
     public function GetWaterVapor()
     {
         return $this->waterVapor;
+    }
+    public function SetLocalWater($value)
+    {
+        $this->localWater = $value;
+    }
+    public function GetLocalWater()
+    {
+        return $this->localWater;
     }
 
 
@@ -652,19 +746,33 @@ class Location
 // - - - [ TEST ] - - - * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // - - - - - - - - - - -
 
-$newLocation = new Location(1, 1, 1, 1, 1, 1, 100);
+$WeatherSystemdataAccess = new WeatherSystemDataAccess("WeatherTest.db");
 $weatherMachine = new WeatherMachine();
-$seasonControl = new SeasonControl(27,true);
 
-for($i = 0; $i < 3; $i ++)
-{    
-    echo "Try " . $i+1 . "\n\n";
-    $season = $seasonControl->ReturnSeason();
+for($i = 0; $i < 20; $i ++)
+{
+    echo "Try " . ($i+1) . "\n\n";
+
+    // *** SEASON BLOCK ***
+    $seasonControl = $WeatherSystemdataAccess->ReadSeasonDataFromDB();
+    $season = $seasonControl->ReturnSeasonAsString();
     echo "Season: " . $season . "\n";
-    $seasonControl->CustomTick(13);
-    $weatherMachine->SetNewTemperature($seasonControl->GetDay(), $newLocation, 'midday');
-    echo $newLocation . "\n-------\n";    
+    $seasonControl->Tick($WeatherSystemdataAccess);    //$seasonControl->CustomTick(13, $WeatherSystemDataAccess);
+
+    // *** LOCATION BLOCK ***
+    $locationArray = $WeatherSystemdataAccess->ReadLocationDataFromDB();
+    echo "\nLocations:\n\n";
+    foreach($locationArray as $newLocation)
+    {
+        $weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, 'midday', $WeatherSystemdataAccess);
+        echo $newLocation . "\n-------\n";
+    }
 }
+
+
+
+
+
 
 
 // - - - - - - - - -
