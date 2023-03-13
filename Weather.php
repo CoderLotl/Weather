@@ -307,30 +307,45 @@ class WeatherSystemDataAccess
 
     public function ReadSeasonDataFromDB()
     {
-        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
+        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);        
 
-        $mysqli->select_db($this->database) or die( "Unable to select database");
-
-        $data = $mysqli->query('SELECT season_day, season_direction FROM worlds');
-
-        $mysqli->close();
-
-        $data = $data->fetch_array();
-
-        $seasonControl = new SeasonControl();
-        $seasonControl->SetDay($data[0]);
-        if($data[1] == 0)
+        try
         {
-            $seasonControl->SetGoingForward(false);            
-        }
-        else
-        {
-            $seasonControl->SetGoingForward(true);
-        }
+            $mysqli->select_db($this->database) or die( "Unable to select database");
+            $data = $mysqli->query('SELECT season_day, season_direction FROM worlds');
 
-        echo "\nSeaconControl created successfully.";
+            $mysqli->close();
+
+            if($data->num_rows > 0)
+            {
+                $data = $data->fetch_array();
+
+                $seasonControl = new SeasonControl();
+                $seasonControl->SetDay($data[0]);
+                if($data[1] == 0)
+                {
+                    $seasonControl->SetGoingForward(false);            
+                }
+                else
+                {
+                    $seasonControl->SetGoingForward(true);
+                }
+
+                echo "\nSeaconControl created successfully.";
+                
+                return $seasonControl;
+            }
+            else
+            {
+                die( "The table is empty" );
+            }
+            
+        }
+        catch(Exception $e)
+        {
+            echo "Imposible to reach the database. Error: " . $e;
+        }
         
-        return $seasonControl;
     }
 
     public function WriteSeasonDataToDB(SeasonControl $seasonControl)
@@ -357,19 +372,33 @@ class WeatherSystemDataAccess
         $locationArray = array();
         $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
 
-        $mysqli->select_db($this->database) or die( "Unable to select database");
+        try
+        {
+            $mysqli->select_db($this->database) or die( "Unable to select database");
 
-        $data = $mysqli->query('SELECT * FROM locations');
+            $data = $mysqli->query('SELECT location_id, location_type, weather, clouds, water_vapor, temperature, local_water FROM locations');
 
-        $mysqli->close();
+            $mysqli->close();
 
-        while($row = $data->fetch_array())
-        {            
-            $location = new Location($row['location_id'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
-            array_push($locationArray, $location);
+            if($data->num_rows > 0)
+            {
+                while($row = $data->fetch_array())
+                {            
+                    $location = new Location($row['location_id'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
+                    array_push($locationArray, $location);
+                }
+            }
+            else
+            {
+                die( "The table is empty" );
+            }
+
+            return $locationArray;
         }
-
-        return $locationArray;        
+        catch(Exception $e)
+        {
+            echo "Imposible to reach the database. Error: " . $e;
+        }               
     }
 
     public function WriteLocationDataToDB(Location $location)
@@ -772,24 +801,15 @@ class Location
 // - - - [ TEST ] - - - * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // - - - - - - - - - - -
 
-/*
-if (!function_exists('mysqli_init') && !extension_loaded('mysqli')) {
-    echo 'NO';
-} else {
-    echo 'YESSS';
-}*/
-
-
 $weatherMachine = new WeatherMachine();
-$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","root","cantrip120","weathertest");
-$weatherSystemdataAccess->ReadSeasonDataFromDB();
+$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
+$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB();
 
 for($i = 0; $i < 3; $i ++)
 {
-    echo "Try " . ($i+1) . "\n\n";
+    echo "\nTry " . ($i+1) . "\n\n";
 
-    // *** SEASON BLOCK ***
-    $seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB();
+    // *** SEASON BLOCK ***    
     $season = $seasonControl->ReturnSeasonAsString();
     echo "Season: " . $season . "\n";
     $seasonControl->Tick($weatherSystemdataAccess);    //$seasonControl->CustomTick(13, $weatherSystemDataAccess);
