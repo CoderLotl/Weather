@@ -275,45 +275,67 @@ class TemperatureParameters // This is a package-class, used only to store and m
 }
 
 class WeatherSystemDataAccess
-{
-    private $DBPath;
+{    
+    private $hostname;
+    private $username;
+    private $password;
+    private $database;
 
-    public function __construct(string $DBPath)
+    public function __construct(string $hostname, string $username, string $password, string $database)
     {
-        $this->DBPath = $DBPath;
+        $this->username = $username;
+        $this->password = $password;
+        $this->database = $database;
     }
 
-    public function GetDBPath()
+    public function GetHostname()
     {
-        return $this->DBPath;
+        return $this->hostname;
+    }
+    public function GetUsername()
+    {
+        return $this->username;
+    }
+    public function GetPassword()
+    {
+        return $this->password;
+    }
+    public function GetDatabase()
+    {
+        return $this->database;
     }
 
     public function ReadSeasonDataFromDB()
     {
+        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
+
+        $mysqli->select_db($this->database) or die( "Unable to select database");
+
+        $data = $mysqli->query('SELECT season_day, season_direction FROM worlds');
+
+        $mysqli->close();
+
+        $data = $data->fetch_array();
+
         $seasonControl = new SeasonControl();
-
-        $db = new SQLite3($this->DBPath);
-
-        $data = $db->query('SELECT Day, GoingForward FROM SeasonControl');
-        $data = $data->fetchArray();
-        
-        $seasonControl->SetDay($data['Day']);        
-        
-        if($data["GoingForward"] == 0)
+        $seasonControl->SetDay($data[0]);
+        if($data[1] == 0)
         {
-            $seasonControl->SetGoingForward(false);
+            $seasonControl->SetGoingForward(false);            
         }
         else
         {
             $seasonControl->SetGoingForward(true);
-        }        
-        //echo 'Day: ' . $this->day . ' | Moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak');
+        }
+
+        echo "\nSeaconControl created successfully.";
+        
         return $seasonControl;
     }
 
     public function WriteSeasonDataToDB(SeasonControl $seasonControl)
     {
-        $db = new SQLite3($this->DBPath);
+        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
 
         $day = $seasonControl->GetDay();
         if($seasonControl->GetGoingForward() == false)
@@ -325,21 +347,25 @@ class WeatherSystemDataAccess
             $goingForward = 1;
         }        
 
-        $command = "UPDATE SeasonControl SET Day = {$day}, GoingForward = {$goingForward}";
+        $command = "UPDATE worlds SET season_day = {$day}, season_direction = {$goingForward}";
 
-        $db->query($command);
+        $mysqli->query($command);
     }
     
     public function ReadLocationDataFromDB()
     {
         $locationArray = array();
-        $db = new SQLite3($this->DBPath);
+        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
 
-        $data = $db->query('SELECT * FROM Locations');
+        $mysqli->select_db($this->database) or die( "Unable to select database");
 
-        while($row = $data->fetchArray())
+        $data = $mysqli->query('SELECT * FROM locations');
+
+        $mysqli->close();
+
+        while($row = $data->fetch_array())
         {            
-            $location = new Location($row['LocationID'], $row['LocationType'], $row['Weather'], $row['Clouds'], $row['WaterVapor'], $row['Temperature'], $row['LocalWater']);            
+            $location = new Location($row['location_id'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
             array_push($locationArray, $location);
         }
 
@@ -348,7 +374,7 @@ class WeatherSystemDataAccess
 
     public function WriteLocationDataToDB(Location $location)
     {
-        $db = new SQLite3($this->DBPath);
+        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
 
         $locationID = $location->GetID();
         $locationType = $location->GetLocationType();
@@ -358,8 +384,8 @@ class WeatherSystemDataAccess
         $temperature = $location->GetTemperature();
         $localWater = $location->GetLocalWater();
 
-        $command = "UPDATE Locations SET LocationID = {$locationID}, LocationType = {$locationType}, Weather = {$weather}, Clouds = {$clouds}, WaterVapor = {$waterVapor}, Temperature = {$temperature}, LocalWater = {$localWater} WHERE LocationID = {$locationID}";
-        $db->query($command);
+        $command = "UPDATE locations SET location_id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID}";
+        $mysqli->query($command);
     }
 }
 
@@ -746,34 +772,37 @@ class Location
 // - - - [ TEST ] - - - * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // - - - - - - - - - - -
 
-$WeatherSystemdataAccess = new WeatherSystemDataAccess("WeatherTest.db");
-$weatherMachine = new WeatherMachine();
+/*
+if (!function_exists('mysqli_init') && !extension_loaded('mysqli')) {
+    echo 'NO';
+} else {
+    echo 'YESSS';
+}*/
 
-for($i = 0; $i < 20; $i ++)
+
+$weatherMachine = new WeatherMachine();
+$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","root","cantrip120","weathertest");
+$weatherSystemdataAccess->ReadSeasonDataFromDB();
+
+for($i = 0; $i < 3; $i ++)
 {
     echo "Try " . ($i+1) . "\n\n";
 
     // *** SEASON BLOCK ***
-    $seasonControl = $WeatherSystemdataAccess->ReadSeasonDataFromDB();
+    $seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB();
     $season = $seasonControl->ReturnSeasonAsString();
     echo "Season: " . $season . "\n";
-    $seasonControl->Tick($WeatherSystemdataAccess);    //$seasonControl->CustomTick(13, $WeatherSystemDataAccess);
+    $seasonControl->Tick($weatherSystemdataAccess);    //$seasonControl->CustomTick(13, $weatherSystemDataAccess);
 
     // *** LOCATION BLOCK ***
-    $locationArray = $WeatherSystemdataAccess->ReadLocationDataFromDB();
+    $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB();
     echo "\nLocations:\n\n";
     foreach($locationArray as $newLocation)
     {
-        $weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, 'midday', $WeatherSystemdataAccess);
+        $weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, 'midday', $weatherSystemdataAccess);
         echo $newLocation . "\n-------\n";
     }
 }
-
-
-
-
-
-
 
 // - - - - - - - - -
 
