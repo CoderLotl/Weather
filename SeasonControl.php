@@ -30,7 +30,7 @@ class SeasonControl
     }
 
     // - - - METHODS
-    public function Tick(WeatherSystemDataAccess $WeatherSystemdataAccess)
+    public function Tick(WeatherSystemDataAccess $WeatherSystemdataAccess, string $table)
     {        
         $previousDay = $this->day;
         if($this->goingForward == true)
@@ -58,10 +58,10 @@ class SeasonControl
             }
         }
         echo 'Previous day: ' . $previousDay . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
-        $WeatherSystemdataAccess->WriteSeasonDataToDB($this, "worlds");
+        $WeatherSystemdataAccess->WriteSeasonDataToDB($this, $table);
     }
 
-    public function CustomTick(int $amountOfDays, WeatherSystemDataAccess $WeatherSystemdataAccess)
+    public function CustomTick(int $amountOfDays, WeatherSystemDataAccess $WeatherSystemdataAccess, string $table)
     {
         $previousDay = $this->day;
         if($amountOfDays >= 0) // IF THE VALUE IS POSITIVE
@@ -136,7 +136,7 @@ class SeasonControl
             }
         }
 
-        $WeatherSystemdataAccess->WriteSeasonDataToDB($this, "worlds");
+        $WeatherSystemdataAccess->WriteSeasonDataToDB($this, $table);
         echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
     }
 

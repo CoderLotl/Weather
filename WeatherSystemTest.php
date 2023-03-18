@@ -93,7 +93,7 @@ for($i = 0; $i < 3; $i ++)
     echo "*** SEASON BLOCK ***\n";
     $season = $seasonControl->ReturnSeasonAsString();
     echo "Season: " . $season . "\n";
-    $seasonControl->Tick($weatherSystemdataAccess);    //$seasonControl->CustomTick(13, $weatherSystemDataAccess);
+    $seasonControl->Tick($weatherSystemdataAccess, "worlds");    //$seasonControl->CustomTick(13, $weatherSystemDataAccess);
 
     echo "*** LOCATION BLOCK ***\n";
     $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
