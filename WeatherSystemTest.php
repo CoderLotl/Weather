@@ -84,24 +84,26 @@ WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rai
 
 $weatherMachine = new WeatherMachine();
 $weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
-$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB();
+$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
 
 for($i = 0; $i < 3; $i ++)
 {
     echo "\nTry " . ($i+1) . "\n\n";
 
-    // *** SEASON BLOCK ***    
+    echo "*** SEASON BLOCK ***\n";
     $season = $seasonControl->ReturnSeasonAsString();
     echo "Season: " . $season . "\n";
     $seasonControl->Tick($weatherSystemdataAccess);    //$seasonControl->CustomTick(13, $weatherSystemDataAccess);
 
-    // *** LOCATION BLOCK ***
-    $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB();
+    echo "*** LOCATION BLOCK ***\n";
+    $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
     echo "\nLocations:\n\n";
     foreach($locationArray as $newLocation)
     {
-        $weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, 'midday', $weatherSystemdataAccess);
-        echo $newLocation . "\n-------\n";
+        if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, 'midday', $weatherSystemdataAccess, "locs") == true)
+        {
+            echo $newLocation . "\n-------\n";
+        }        
     }
 }
 

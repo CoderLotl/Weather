@@ -4,6 +4,7 @@ class Location
 {
     // - - - ATTRIBUTES
     private $locationID;    // Discretional
+    private $locationName;
     private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
     private $weather;       // [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
     private $clouds;        // The amount of clouds in a range of of int that goes from 0 to 10.
@@ -12,9 +13,10 @@ class Location
     private $localWater;    // The amount of water in liquid state at the location. Rivers, pools, lakes, whatever.    
 
     // - - - CONSTRUCTOR
-    public function __construct(int $locationID, int $locationType, int $weather, int $clouds, int $waterVapor, Int $temperature, int $localWater)
+    public function __construct(int $locationID, string $locationName, int $locationType, int $weather, int $clouds, int $waterVapor, Int $temperature, int $localWater)
     {
         $this->locationID = $locationID;
+        $this->locationName = $locationName;
         $this->locationType = $locationType;
         $this->weather = $weather;
         $this->clouds = $clouds;
@@ -31,6 +33,14 @@ class Location
     public function GetID()
     {
         return $this->locationID;
+    }
+    public function SetName($value)
+    {
+        $this->locationName = $value;
+    }
+    public function GetName()
+    {
+        return $this->locationName;
     }
     public function SetTemperature($value)
     {
@@ -91,7 +101,7 @@ class Location
         $saturationPoint = $weatherMachine->CalcSaturationPoint($this->temperature);
         $saturationPointTemp = $weatherMachine->CalcSaturationPointTemp($this);
 
-        return "Location ID: {$this->locationID}\nSky: {$clouds}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
+        return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
         . "\nWater Vapor: {$this->waterVapor} g/m3 | Water Vapor Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%" . 
         " | Saturation Temp for this humidity: {$saturationPointTemp}°C";
     }

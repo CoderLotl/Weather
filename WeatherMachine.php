@@ -1,16 +1,25 @@
 <?php
 class WeatherMachine
 {
-    public function ExecuteWeatherTick($season, Location $location, $dayStage, WeatherSystemDataAccess $WeatherSystemdataAccess)
+    public function ExecuteWeatherTick($season, Location $location, $dayStage, WeatherSystemDataAccess $WeatherSystemdataAccess, string $table)
     {
-        // CALCULATING AND SETTING THE NEW TEMPERATURE
-        $temperature = $this->CalcNewTemperature($season, $location->GetLocationType(), $dayStage, $location->GetWeather());
-        $location->SetTemperature($temperature);
+        if($location->GetLocationType() != -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
+        {
+            // CALCULATING AND SETTING THE NEW TEMPERATURE
+            $temperature = $this->CalcNewTemperature($season, $location->GetLocationType(), $dayStage, $location->GetWeather());
+            $location->SetTemperature($temperature);
         
-        // CALCULATING AND SETTING THE NEW WEATHER
-        $weather = $this->CalcNewWeather($location);
+            // CALCULATING AND SETTING THE NEW WEATHER
+            $weather = $this->CalcNewWeather($location);
 
-        $WeatherSystemdataAccess->WriteLocationDataToDB($location);
+            $WeatherSystemdataAccess->WriteLocationDataToDB($location, $table);
+
+            return true; // Returns the previous instance if the calculation was successful or not.
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public function CalcSaturationPointTemp(Location $location)

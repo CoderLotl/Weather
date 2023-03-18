@@ -30,14 +30,14 @@ class WeatherSystemDataAccess
         return $this->database;
     }
 
-    public function ReadSeasonDataFromDB()
+    public function ReadSeasonDataFromDB(string $table)
     {
         $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);        
 
         try
         {
             $mysqli->select_db($this->database) or die( "Unable to select database");
-            $data = $mysqli->query('SELECT season_day, season_direction FROM worlds');
+            $data = $mysqli->query("SELECT season_day, season_direction FROM {$table}");
 
             $mysqli->close();
 
@@ -73,7 +73,7 @@ class WeatherSystemDataAccess
         
     }
 
-    public function WriteSeasonDataToDB(SeasonControl $seasonControl)
+    public function WriteSeasonDataToDB(SeasonControl $seasonControl, string $table)
     {
         $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
 
@@ -87,12 +87,12 @@ class WeatherSystemDataAccess
             $goingForward = 1;
         }        
 
-        $command = "UPDATE worlds SET season_day = {$day}, season_direction = {$goingForward}";
+        $command = "UPDATE {$table} SET season_day = {$day}, season_direction = {$goingForward}";
 
         $mysqli->query($command);
     }
     
-    public function ReadLocationDataFromDB()
+    public function ReadLocationDataFromDB(string $table)
     {
         $locationArray = array();
         $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
@@ -101,7 +101,7 @@ class WeatherSystemDataAccess
         {
             $mysqli->select_db($this->database) or die( "Unable to select database");
 
-            $data = $mysqli->query('SELECT location_id, location_type, weather, clouds, water_vapor, temperature, local_water FROM locations');
+            $data = $mysqli->query("SELECT id, ". "name" . ", location_type, weather, clouds, water_vapor, temperature, local_water FROM {$table}");
 
             $mysqli->close();
 
@@ -109,7 +109,7 @@ class WeatherSystemDataAccess
             {
                 while($row = $data->fetch_array())
                 {            
-                    $location = new Location($row['location_id'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
+                    $location = new Location($row['id'], $row['name'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
                     array_push($locationArray, $location);
                 }
             }
@@ -126,11 +126,11 @@ class WeatherSystemDataAccess
         }               
     }
 
-    public function WriteLocationDataToDB(Location $location)
+    public function WriteLocationDataToDB(Location $location, string $table)
     {
         $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
 
-        $locationID = $location->GetID();
+        $locationID = $location->GetID();        
         $locationType = $location->GetLocationType();
         $weather = $location->GetWeather();
         $clouds = $location->GetClouds();
@@ -138,7 +138,7 @@ class WeatherSystemDataAccess
         $temperature = $location->GetTemperature();
         $localWater = $location->GetLocalWater();
 
-        $command = "UPDATE locations SET location_id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID}";
+        $command = "UPDATE {$table} SET id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE id = {$locationID}";
         $mysqli->query($command);
     }
 }
