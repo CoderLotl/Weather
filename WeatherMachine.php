@@ -26,10 +26,11 @@ class WeatherMachine
     {
         $temperature = $location->GetTemperature();
         $localWater = $location->GetLocalWater();
-        $slopeAdjustment = 3; // the bigger this param, the softer the slope.
+        $heightAdjustment = 3; // This param controls the function's height. The bigger the number, the higher the max result.
+        $slopeAdjustment = 3; // This param controls the function's slope around 0. The bigger this param, the softer the slope.
         $locationAdjustment = 0;
 
-        return 3 * atan($temperature/$slopeAdjustment) * log($localWater) + $locationAdjustment;
+        return $heightAdjustment * atan($temperature/$slopeAdjustment) * log($localWater) + $locationAdjustment;
     }
     
     public function ExecuteWaterEvaporation(Location $location)
