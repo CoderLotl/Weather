@@ -22,6 +22,33 @@ class WeatherMachine
         }
     }
 
+    public function CalcWaterEvaporation(Location $location)
+    {
+        $temperature = $location->GetTemperature();
+        $localWater = $location->GetLocalWater();
+        $slopeAdjustment = 3; // the bigger this param, the softer the slope.
+        $locationAdjustment = 0;
+
+        return 3 * atan($temperature/$slopeAdjustment) * log($localWater) + $locationAdjustment;
+    }
+    
+    public function ExecuteWaterEvaporation(Location $location)
+    {
+        $localWater = $location->GetLocalWater();
+        $waterEvaporation = $this->CalcWaterEvaporation($location);
+        
+        if($localWater >= $waterEvaporation)
+        {            
+            $location->SetLocalWater($newLocalWater = $localWater - $waterEvaporation);
+            // interpretration
+        }
+        else
+        {
+            $location->SetLocalWater(0);
+            // interpretration            
+        }
+    }
+
     public function CalcSaturationPointTemp(Location $location)
     {
         $temperature = $location->GetTemperature();
@@ -129,13 +156,12 @@ class WeatherMachine
                             // Increasing this var expands the temp range both ways. Reducing it does the opposite.
         $plus = 0;          // This factor adds a plus.
 
-        // ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk']
-
+        
         switch($locationType)
         {
             case 1: // Plains / meadows
                 $tuning = 12; $amplitude = 2.6; $plus = 0; // -6 to 29 C, 21 to 85 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
-                $topLimits =    [-3, -2, -1, 0, 1, 2, 1, 1];
+                $topLimits =    [-3, -2, -1, 0, 1, 2, 1, 1]; // ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk']
                 $bottomLimits = [-4, -3, -2, -1, 0, 1, 0, 0];
                 break;
             case 2: // Jungles 
@@ -231,13 +257,7 @@ class WeatherMachine
     {
         switch($weather)
         {
-            // WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
-            case -2:
-                $param = 0;
-                break;
-            case -1:
-                $param = 0;
-                break;
+            // WEATHER STAGES: [0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
             case 0:
                 $param = 0;
                 break;
