@@ -36,7 +36,7 @@ class WeatherSystemDataAccess
 
         try
         {
-            $mysqli->select_db($this->database) or die( "Unable to select database");
+            $mysqli->select_db($this->database) or die( "Unable to select database.");
             $data = $mysqli->query("SELECT season_day, season_direction FROM {$table}");
 
             $mysqli->close();
@@ -99,7 +99,7 @@ class WeatherSystemDataAccess
 
         try
         {
-            $mysqli->select_db($this->database) or die( "Unable to select database");
+            $mysqli->select_db($this->database) or die( "Unable to select database.");
 
             $data = $mysqli->query("SELECT id, ". "name" . ", location_type, weather, clouds, water_vapor, temperature, local_water FROM {$table}");
 
@@ -115,7 +115,7 @@ class WeatherSystemDataAccess
             }
             else
             {
-                die( "The table is empty" );
+                die( "The table is empty." );
             }
 
             return $locationArray;

@@ -1,17 +1,13 @@
 <?php
-
-require_once('TemperatureParameters.php');
-require_once('SeasonControl.php');
-require_once('WeatherSystemDataAccess.php');
-require_once('WeatherMachine.php');
-require_once('Location.php');
+require('WeatherSystemSQLiteDataAccess.php');
+require('TemperatureParametersClass.php');
+require('SeasonControlClass.php');
+require('WeatherSystemDataAccessClass.php');
+require('WeatherMachineClass.php');
+require('LocationClass.php');
 
 /*
-*   // - - - [ NOTES ] - - -
-*
-*   - To add: humidity, seasons, precipitation.
-*   
-*   
+
 *   - When the season is hotter, the air is not cold enough for clouds to form due to the fact they need to condensate. Therefore, it rains less.
 *       The oppossite happens when the season is colder. Colder season = more clouds = more rain.
 *   - If the air is hotter, the water will evaporate faster and create higher lower humidity.
@@ -73,9 +69,22 @@ humidity for cloud formation:
 5. - If it goes up because of evaporation, you get less local water. - If you get less clouds because of precipitation, you have more water.)
 
 DAY STAGE: ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night']
-WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
+WEATHER STAGES: [ 0: Not raining. 1: Dew. 2: Drizzle. 3: Light rain. 4: rain. 5: downpour. 6: storm.]
+
+
+WATER:
+
+15 -> DESERT
+15 -> CANYON
+50 -> MOUNTAINS
+30 -> TUNDRA
+100 -> PLAINS / MEADOWS / TAIGA
+200 -> WOODS / FOREST
+1000 -> SWAMPS / LAKE
+250 -> JUNGLES
+
 */
-// - - - [ CLASSES ] - - -
+
 
 
 // - - - - - - - - - - -
@@ -83,24 +92,25 @@ WEATHER STAGES: [-2: Very sunny. -1: Sunny. 0: Not raining. 1: Dew. 2: Light rai
 // - - - - - - - - - - -
 
 $weatherMachine = new WeatherMachine();
-$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
-$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
+//$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
+$weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess("WeatherTest.db");
+//$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
+$seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds");
 
-for($i = 0; $i < 3; $i ++)
+$day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
+
+for($i = 0; $i < 1; $i ++)
+foreach($day as $dayStage)
 {
-    echo "\nTry " . ($i+1) . "\n\n";
-
-    echo "*** SEASON BLOCK ***\n";
-    $season = $seasonControl->ReturnSeasonAsString();
-    echo "Season: " . $season . "\n";
-    $seasonControl->Tick($weatherSystemdataAccess, "worlds");    //$seasonControl->CustomTick(13, $weatherSystemDataAccess);
-
-    echo "*** LOCATION BLOCK ***\n";
-    $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
+    echo "\n*** LOCATION BLOCK ***";
+    echo "\nDay Stage: {$dayStage}";
+    //$locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
+    $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
     echo "\nLocations:\n\n";
     foreach($locationArray as $newLocation)
     {
-        if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, 'midday', $weatherSystemdataAccess, "locs") == true)
+        //if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemdataAccess, "locs") == true)
+        if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemDataAccessSQLite, "locs") == true)
         {
             echo $newLocation . "\n-------\n";
         }        

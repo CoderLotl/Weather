@@ -1,4 +1,5 @@
 <?php
+
 class WeatherMachine
 {
     public function ExecuteWeatherTick($season, Location $location, $dayStage, WeatherSystemDataAccess $WeatherSystemdataAccess, string $table)
@@ -22,32 +23,114 @@ class WeatherMachine
         }
     }
 
-    public function CalcWaterEvaporation(Location $location)
+    public function ExecuteWeatherTickSQLite($season, Location $location, $dayStage, WeatherSystemSQLiteDataAccess $WeatherSystemdataAccess, string $table)
     {
-        $temperature = $location->GetTemperature();
-        $localWater = $location->GetLocalWater();
-        $heightAdjustment = 3; // This param controls the function's height. The bigger the number, the higher the max result.
-        $slopeAdjustment = 3; // This param controls the function's slope around 0. The bigger this param, the softer the slope.
-        $locationAdjustment = 0;
-
-        return $heightAdjustment * atan($temperature/$slopeAdjustment) * log($localWater) + $locationAdjustment;
-    }
-    
-    public function ExecuteWaterEvaporation(Location $location)
-    {
-        $localWater = $location->GetLocalWater();
-        $waterEvaporation = $this->CalcWaterEvaporation($location);
-        
-        if($localWater >= $waterEvaporation)
+        if($location->GetLocationType() != -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
         {            
-            $location->SetLocalWater($newLocalWater = $localWater - $waterEvaporation);
-            // interpretration
+            // CALCULATING AND SETTING THE NEW TEMPERATURE
+            $temperature = $this->CalcNewTemperature($season, $location->GetLocationType(), $dayStage, $location->GetWeather());
+            $location->SetTemperature($temperature);
+        
+            // CALCULATING AND APPLYING EVAPORATION
+            $this->ApplyWaterEvaporation($location);
+
+
+            // CALCULATING AND SETTING THE NEW WEATHER
+            $weather = $this->CalcNewWeather($location);
+
+            $WeatherSystemdataAccess->WriteLocationDataToDB($location, $table);
+
+            return true; // Returns the previous instance if the calculation was successful or not.
         }
         else
         {
-            $location->SetLocalWater(0);
-            // interpretration            
+            return false;
         }
+    }
+
+    private function CalcCloudification(Location $location, float $locationAdjustment = 0, int $temperatureAdjustment = 0)
+    {        
+        if($location->GetWaterVapor() > 1)
+        {
+            $temperature = $location->GetTemperature();
+            $waterVapor = $location->GetWaterVapor();
+            $heightAdjustment = 0.4; // This param controls the function's height. The bigger the number, the higher the max result.
+            $slopeAdjustment = 10; // This param controls the function's slope around 0. The bigger this param, the softer the slope.
+            $locationAdjustment = 0;
+
+            $cloudification = $heightAdjustment * atan(($temperature - $temperatureAdjustment)/$slopeAdjustment) * log($waterVapor) + $locationAdjustment;            
+        }
+        else
+        {
+            $cloudification = 0;
+        }
+
+        return $cloudification;
+    }
+
+    private function ApplyCloudification(Location $location)
+    {
+        $waterVapor = $location->GetWaterVapor();
+        $clouds = $location->GetClouds();
+
+        $cloudification = $this->CalcCloudification($location, 0, 5);
+
+        if($cloudification != 0)
+        {
+            if($waterVapor >= $cloudification)
+            {
+                $newWaterVapor = $waterVapor - $cloudification;
+                $newClouds = $clouds + $cloudification;
+                    
+                $location->SetWaterVapor($newWaterVapor);
+                $location->SetClouds($newClouds);
+            }
+            else
+            {
+                $location->SetClouds(99);
+                $location->SetWaterVapor(1);
+            }
+        }
+    }
+
+    private function CalcWaterEvaporation(Location $location, float $locationAdjustment = 0)
+    {
+        if($location->GetLocalWater() > 1)
+        {
+            $temperature = $location->GetTemperature();
+            $localWater = $location->GetLocalWater();
+            $heightAdjustment = 0.4; // This param controls the function's height. The bigger the number, the higher the max result.
+            $slopeAdjustment = 10; // This param controls the function's slope around 0. The bigger this param, the softer the slope.
+            $locationAdjustment = 0;
+
+            $waterEvaporation = $heightAdjustment * atan($temperature/$slopeAdjustment) * log($localWater) + $locationAdjustment;
+        }
+        else
+        {
+            $waterEvaporation = 0;
+        }
+        
+        return $waterEvaporation;
+    }
+    
+    public function ApplyWaterEvaporation(Location $location)
+    {
+        $localWater = $location->GetLocalWater();
+        $waterVapor = $location->GetWaterVapor();
+
+        $waterEvaporation = $this->CalcWaterEvaporation($location);        
+
+        if($waterEvaporation != 0)
+        {
+            if($localWater >= $waterEvaporation)
+            {
+                $newLocalWater = $localWater - $waterEvaporation;
+                $newWaterVapor = $waterVapor + $waterEvaporation;
+    
+                $location->SetLocalWater($newLocalWater);
+                $location->SetWaterVapor($newWaterVapor);                
+            }
+        }        
     }
 
     public function CalcSaturationPointTemp(Location $location)
@@ -97,21 +180,7 @@ class WeatherMachine
         else
         {
             // else
-        }
-
-        /*
-        Weather depends on: the clouds variable, the temp, and the humidity
-
-        [ CLOUDS ] -> more cloude = more chances of rain ~ Clouds go from 0 to 10.
-
-        [0 = clear. 1-2 fair. 3-4 few clouds. 5-6 fairly clouded. 7-8 clouded. 9-10 heavily clouded.]
-
-        If there are no clouds (0), only dew could happen. Otherwise it could be sunny or very sunny.
-        If the sky is fair to a few clouds (1 to 4), it could be either sunny or be a light rain. Chances of rain increase if there are a few clouds.
-        If it's fairly clouded to clouded (5 to 8), only from not raining to rain. Chances of rain increase if it's clouded. Clouded also allows downpour.
-        If it's heavily clouded, only from not raining to downpour.
-        */
-        
+        }        
     }
 
     private function ReturnIndexByDayStage(string $dayStage)
@@ -147,6 +216,35 @@ class WeatherMachine
         return $indexToReturn;
     }
 
+    private function SetLocationAdjustment($locationType)
+    {
+        switch($locationType)
+        {
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:                
+                break;
+            case 5:
+                break;
+            case 6:
+                break;
+            case 7:
+                break;
+            case 8:
+                break;
+            case 9:
+                break;
+            case 10:
+                break;
+            case 11:
+                break;
+        }
+    }
+
     private function SetParamsByLocation($locationType)
     {
         // This part calculates the average temperatures by Location.
@@ -176,9 +274,9 @@ class WeatherMachine
                 $bottomLimits = [-4, -3, -2, -1, 0, 1, 0, 0];
                 break;
             case 4: // Deserts 
-                $tuning = 19; $amplitude = 1; $plus = 0; // 53 to 77 F, 12 to 25 C. - Deviation should go a lil bit up and down. - Night and day changes are HUGE.
-                $topLimits =    [-10, -7, -4, 0, 7, 10, 4, 4];
-                $bottomLimits = [-14, -10, -5, 0, 5, 7, 3, 3];
+                $tuning = 19; $amplitude = 0.5; $plus = 0; // 53 to 77 F, 12 to 25 C. - Deviation should go a lil bit up and down. - Night and day changes are HUGE.
+                $topLimits =    [-18, -12, -7, 0, 7, 12, 4, -2];
+                $bottomLimits = [-20, -16, -9, 0, 5, 9, 3, -4];
                 break;
             case 5: // Mountains
                 $tuning = 19; $amplitude = 1; $plus = 0; // Same as deserts... For now.

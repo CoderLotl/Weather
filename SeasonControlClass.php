@@ -61,7 +61,117 @@ class SeasonControl
         $WeatherSystemdataAccess->WriteSeasonDataToDB($this, $table);
     }
 
+    public function TickSQLite(WeatherSystemSQLiteDataAccess $WeatherSystemdataAccess, string $table)
+    {        
+        $previousDay = $this->day;
+        if($this->goingForward == true)
+        {
+            if($this->day != 42)
+            {
+                $this->day++;
+            }
+            else
+            {
+                $this->goingForward = false;
+                $this->day--;
+            }
+        }
+        else
+        {
+            if($this->day != -42)
+            {
+                $this->day--;
+            }
+            else
+            {
+                $this->goingForward = true;
+                $this->goingForward++;
+            }
+        }
+        echo 'Previous day: ' . $previousDay . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
+        $WeatherSystemdataAccess->WriteSeasonDataToDB($this, $table);
+    }
+
     public function CustomTick(int $amountOfDays, WeatherSystemDataAccess $WeatherSystemdataAccess, string $table)
+    {
+        $previousDay = $this->day;
+        if($amountOfDays >= 0) // IF THE VALUE IS POSITIVE
+        {
+            if($this->goingForward == true) // ... AND THE YEAR IS GOING FORWARD
+            {
+                if( ($this->day + $amountOfDays) <= 42)
+                {
+                    $this->day += $amountOfDays;
+                    if($this->day == 42)
+                    {
+                        $this->goingForward = false;
+                    }
+                }
+                else // IF THERE'S AN EXCESS ... THE YEAR IS GOING TO GO BACKWARDS AFTER THIS.
+                {
+                    $excess = ($this->day + $amountOfDays) - 42;
+                    $this->day = 42 - $excess;
+                    $this->goingForward = false;
+                }
+            }
+            else // ... ELSE, IF THE YEAR IS GOING BACKWARDS...
+            {
+                if( ($this->day - $amountOfDays) >= -42)
+                {
+                    $this->day -= $amountOfDays;
+                    if($this->day == -42)
+                    {
+                        $this->goingForward = true;
+                    }
+                }
+                else
+                {
+                    $excess = ($this->day - $amountOfDays) + 42;
+                    $this->day = -42 - $excess;
+                    $this->goingForward = true;
+                }
+            }
+        }
+
+        elseif($amountOfDays <=0) // IF THE VALUE IS NEGATIVE
+        {
+            if($this->goingForward == true) // ... AND THE YEAR IS GOING FORWARD
+            {
+                if( ($this->day + $amountOfDays) >= -42)
+                {
+                    $this->day += $amountOfDays;
+                }
+                else // IF THERE'S AN EXCESS ... THE YEAR IS GOING TO GO BACKWARDS AFTER THIS.
+                {
+                    $excess = ($this->day + $amountOfDays) + 42;
+                    $this->day = -42 - $excess;
+                    $this->goingForward = false;
+                }
+            }
+            else // ... ELSE, IF THE YEAR IS GOING BACKWARDS...
+            {
+                if( ($this->day - $amountOfDays) <= 42)
+                {
+                    $this->day -= $amountOfDays;
+                    if($this->day == 42)
+                    {
+                        $this->goingForward = true;
+                    }
+                }
+                else
+                {
+                    $excess = ($this->day - $amountOfDays) - 42;
+                    $this->day = -42 - $excess;
+                    $this->goingForward = true;
+                }
+            }
+        }
+
+        $WeatherSystemdataAccess->WriteSeasonDataToDB($this, $table);
+        echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
+    }
+
+    public function CustomTickSQLite(int $amountOfDays, WeatherSystemSQLiteDataAccess $WeatherSystemdataAccess, string $table)
     {
         $previousDay = $this->day;
         if($amountOfDays >= 0) // IF THE VALUE IS POSITIVE
