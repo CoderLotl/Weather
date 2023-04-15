@@ -23,7 +23,7 @@ class WeatherMachine
         }
     }
 
-    public function ExecuteWeatherTickSQLite($season, Location $location, $dayStage, WeatherSystemSQLiteDataAccess $WeatherSystemdataAccess, string $table)
+    public function ExecuteWeatherTickSQLite($season, Location $location, $dayStage, WeatherSystemSQLiteDataAccess $weatherSystemdataAccess, string $table)
     {
         if($location->GetLocationType() != -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
         {            
@@ -34,17 +34,49 @@ class WeatherMachine
             // CALCULATING AND APPLYING EVAPORATION
             $this->ApplyWaterEvaporation($location);
 
+            // CALCULATING AND APPLYING CLOUDIFICATION
+            $this->ApplyCloudification($location);
 
             // CALCULATING AND SETTING THE NEW WEATHER
             $weather = $this->CalcNewWeather($location);
 
-            $WeatherSystemdataAccess->WriteLocationDataToDB($location, $table);
+            $this->ExecuteDewPrecipitation($location);
+
+            $weatherSystemdataAccess->WriteLocationDataToDB($location, $table);
 
             return true; // Returns the previous instance if the calculation was successful or not.
         }
         else
         {
             return false;
+        }
+    }
+
+    private function ExecuteDewPrecipitation(Location $location)
+    {
+        $waterVapor = $location->GetWaterVapor();
+        $saturationPoint = $this->CalcSaturationPoint($location->GetTemperature());
+        $dew = false;
+
+        if($waterVapor >1 && $waterVapor >= $saturationPoint)
+        {
+            $dewAmount = ($waterVapor * 35) / 100;
+            $location->SetWaterVapor($waterVapor - $dewAmount);
+            $location->SetLocalWater($location->GetLocalWater() + $dewAmount);
+            $dew = true;
+        }
+        else
+        {
+            $dew = false;
+        }
+
+        if($dew == false && $location->GetWeather() == 1)
+        {
+            $location->SetWeather(0);
+        }
+        if($dew == true && $location->GetWeather() == 0)
+        {
+            $location->SetWeather(1);
         }
     }
 
@@ -73,7 +105,7 @@ class WeatherMachine
         $waterVapor = $location->GetWaterVapor();
         $clouds = $location->GetClouds();
 
-        $cloudification = $this->CalcCloudification($location, 0, 5);
+        $cloudification = $this->CalcCloudification($location, 0, 10);
 
         if($cloudification != 0)
         {
@@ -84,11 +116,6 @@ class WeatherMachine
                     
                 $location->SetWaterVapor($newWaterVapor);
                 $location->SetClouds($newClouds);
-            }
-            else
-            {
-                $location->SetClouds(99);
-                $location->SetWaterVapor(1);
             }
         }
     }
