@@ -100,23 +100,24 @@ $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds");
 $day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
 
 for($i = 0; $i < 1; $i ++)
-foreach($day as $dayStage)
 {
-    echo "\n*** LOCATION BLOCK ***";
-    echo "\nDay Stage: {$dayStage}";
-    //$locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
-    $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
-    echo "\nLocations:\n\n";
-    foreach($locationArray as $newLocation)
+    foreach($day as $dayStage)
     {
-        //if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemdataAccess, "locs") == true)
-        if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemDataAccessSQLite, "locs") == true)
+        echo "\n*** LOCATION BLOCK ***";
+        echo "\nDay Stage: {$dayStage}";
+        //$locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
+        $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+        echo "\nLocations:\n\n";
+        foreach($locationArray as $newLocation)
         {
-            echo $newLocation . "\n-------\n";
-        }        
+            //if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemdataAccess, "locs") == true)
+            if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemDataAccessSQLite, "locs") == true)
+            {
+                echo $newLocation . "\n-------\n";
+            }        
+        }
     }
 }
-
 // - - - - - - - - -
 
 // - - - [ DOCUMENTATION ] - - -
