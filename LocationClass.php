@@ -101,13 +101,44 @@ class Location
         $relativeHumidity = $weatherMachine->CalcRelativeHumidity($this);
         $saturationPoint = $weatherMachine->CalcSaturationPoint($this->temperature);
         $saturationPointTemp = $weatherMachine->CalcSaturationPointTemp($this);
+        $weather = $this->TranslateWeather();
 
-        return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
+        return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nWeather: {$weather}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
         . "\nWater Vapor: {$this->waterVapor} g/m3 | Water Vapor Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%" . 
         " | Saturation Temp for this humidity: {$saturationPointTemp}°C\nLocal Water: {$this->GetLocalWater()}.";
     }
 
     // - - - METHODS
+    private function TranslateWeather()
+    {
+        // [ 0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
+        $returnValue = "";
+        $weather = $this->GetWeather();        
+        switch($weather)
+        {
+            case 0:
+                $returnValue = "Not raining.";
+                break;
+            case 1:
+                $returnValue = "Dew.";
+                break;
+            case 2:
+                $returnValue = "Light rain.";
+                break;
+            case 3:
+                $returnValue = "Raining.";
+                break;
+            case 4:
+                $returnValue = "Downpour.";
+                break;
+            case 5:
+                $returnValue = "Storm.";
+                break;                
+        }
+
+        return $returnValue;
+    }
+
     private function TranslateCloudsValue()
     {
         $returnValue = "";
