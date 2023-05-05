@@ -75,13 +75,13 @@ class WeatherSystemSQLiteDataAccess
     {
         $db = new SQLite3($this->DBPath);
 
-        $locationID = $location->GetID();
-        $locationType = $location->GetLocationType();
-        $weather = $location->GetWeather();
-        $clouds = $location->GetClouds();
-        $waterVapor = $location->GetWaterVapor();
-        $temperature = $location->GetTemperature();
-        $localWater = $location->GetLocalWater();
+        $locationID = $location->__get("id");
+        $locationType = $location->__get("type");
+        $weather = $location->__get("weather");
+        $clouds = $location->__get("clouds");
+        $waterVapor = $location->__get("waterVapor");
+        $temperature = $location->__get("temperature");
+        $localWater = $location->__get("localWater");
 
         $command = "UPDATE {$table} SET location_id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID}";
         $db->query($command);

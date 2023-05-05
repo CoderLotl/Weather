@@ -26,88 +26,108 @@ class Location
     }
 
     // - - - PROPERTIES
-    public function SetID($value)
+    public function __set($name, $value)
     {
-        $this->locationID = $value;
-    }
-    public function GetID()
-    {
-        return $this->locationID;
-    }
-    public function SetName($value)
-    {
-        $this->locationName = $value;
-    }
-    public function GetName()
-    {
-        return $this->locationName;
-    }
-    public function SetTemperature($value)
-    {
-        $this->temperature = $value;
-    }
-    public function GetTemperature()
-    {
-        return $this->temperature;
-    }
-    public function SetLocationType($value)
-    {
-        $this->locationType = $value;
-    }
-    public function GetLocationType()
-    {
-        return $this->locationType;
-    }
-    public function SetWeather($value)
-    {
-        $this->weather = $value;
-    }
-    public function GetWeather()
-    {
-        return $this->weather;
-    }
-    public function SetClouds($value)
-    {
-        $this->clouds = $value;
-    }
-    public function GetClouds()
-    {
-        return $this->clouds;
-    }
-    public function SetWaterVapor($value)
-    {
-        $this->waterVapor = $value;
-    }
-    public function GetWaterVapor()
-    {
-        return $this->waterVapor;
-    }
-    public function SetLocalWater($value)
-    {
-        $this->localWater = $value;
-    }
-    public function GetLocalWater()
-    {
-        return $this->localWater;
+        switch($name)
+        {
+            case 'id':
+                $this->locationID = $value;
+                break;
+            case 'name':
+                $this->locationName = $value;
+                break;
+            case 'type':
+                $this->locationType = $value;
+                break;
+            case 'weather':
+                $this->weather = $value;
+                break;
+            case 'clouds':
+                $this->clouds = $value;
+            case 'waterVapor':
+                $this->waterVapor = $value;
+                break;
+            case 'temperature':
+                $this->temperature = $value;
+                break;
+            case 'localWater':
+                $this->localWater = $value;
+        }
     }
 
+    public function __get($name)
+    {        
+        switch($name)
+        {
+            case 'id':
+                return $this->locationID;                
+            case 'name':
+                return $this->locationName;                
+            case 'type':
+                return $this->locationType;                
+            case 'weather':
+                return $this->weather;                
+            case 'clouds':
+                return $this->clouds;
+            case 'waterVapor':
+                return $this->waterVapor;                
+            case 'temperature':
+                return $this->temperature;                
+            case 'localWater':
+                return $this->localWater;
+        }        
+    }    
 
     // - - - MISC
     public function __toString()
     {
         $clouds = $this->TranslateCloudsValue();
-        $cloudsValue = $this->GetClouds();
+        $cloudsValue = $this->__get("clouds");
         $weatherMachine = new WeatherMachine();
         $relativeHumidity = $weatherMachine->CalcRelativeHumidity($this);
         $saturationPoint = $weatherMachine->CalcSaturationPoint($this->temperature);
         $saturationPointTemp = $weatherMachine->CalcSaturationPointTemp($this);
+        $weather = $this->TranslateWeather();
 
-        return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
+        return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nWeather: {$weather}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
         . "\nWater Vapor: {$this->waterVapor} g/m3 | Water Vapor Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%" . 
-        " | Saturation Temp for this humidity: {$saturationPointTemp}°C\nLocal Water: {$this->GetLocalWater()}.";
+        " | Saturation Temp for this humidity: {$saturationPointTemp}°C\nLocal Water: {$this->__get("localWater")}.";
     }
 
     // - - - METHODS
+    private function TranslateWeather()
+    {
+        // WEATHER STAGES: [ 0: Not raining. 1: Dew. 2: Drizzle. 3: Light rain. 4: rain. 5: downpour. 6: storm.]
+        $returnValue = "";
+        $weather = $this->__get("weather");
+        switch($weather)
+        {
+            case 0:
+                $returnValue = "Not raining";
+                break;
+            case 1:
+                $returnValue = "Dew";
+                break;
+            case 2:
+                $returnValue = "Drizzle";
+                break;
+            case 3:
+                $returnValue = "Light rain";
+                break;
+            case 4:
+                $returnValue = "Rain";
+                break;
+            case 5:
+                $returnValue = "Downpour";
+                break;
+            case 6:
+                $returnValue = "Storm";
+                break;
+        }
+
+        return $returnValue;
+    }
+
     private function TranslateCloudsValue()
     {
         $returnValue = "";
@@ -132,7 +152,7 @@ class Location
             case ($clouds >= 50 && $clouds < 70):
                 $returnValue = "Very clouded";
                 break;
-            case ($clouds >= 70 && $clouds <= 100):
+            case ($clouds >= 70):
                 $returnValue = "Heavily clouded";
                 break;
         }
