@@ -220,6 +220,7 @@ class WeatherMachine
         $clouds = $location->__get("clouds");
 
         $cloudification = $this->CalcCloudification($location, 0, 10);
+        $cloudification = $this->CalcCloudification($location, 0, 10);
 
         if($cloudification != 0)
         {

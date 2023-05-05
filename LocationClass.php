@@ -88,7 +88,9 @@ class Location
         $saturationPoint = $weatherMachine->CalcSaturationPoint($this->temperature);
         $saturationPointTemp = $weatherMachine->CalcSaturationPointTemp($this);
         $weather = $this->TranslateWeather();
+        $weather = $this->TranslateWeather();
 
+        return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nWeather: {$weather}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
         return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nWeather: {$weather}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
         . "\nWater Vapor: {$this->waterVapor} g/m3 | Water Vapor Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%" . 
         " | Saturation Temp for this humidity: {$saturationPointTemp}°C\nLocal Water: {$this->__get("localWater")}.";
