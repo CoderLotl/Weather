@@ -18,7 +18,7 @@ class WeatherSystemSQLiteDataAccess
     {
         $seasonControl = new SeasonControl();
 
-        $db = new SQLite3($this->DBPath);
+        $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
 
         $data = $db->query("SELECT season_day, season_direction FROM {$table}");
         $data = $data->fetchArray();        
@@ -38,7 +38,7 @@ class WeatherSystemSQLiteDataAccess
 
     public function WriteSeasonDataToDB(SeasonControl $seasonControl, string $table)
     {
-        $db = new SQLite3($this->DBPath);
+        $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
 
         $day = $seasonControl->GetDay();        
         if($seasonControl->GetGoingForward() == false)
@@ -58,7 +58,7 @@ class WeatherSystemSQLiteDataAccess
     public function ReadLocationDataFromDB(string $table)
     {        
         $locationArray = array();
-        $db = new SQLite3($this->DBPath);
+        $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
 
         $data = $db->query("SELECT * FROM {$table}");
 
@@ -73,7 +73,7 @@ class WeatherSystemSQLiteDataAccess
 
     public function WriteLocationDataToDB(Location $location, string $table)
     {
-        $db = new SQLite3($this->DBPath);
+        $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
 
         $locationID = $location->__get("id");
         $locationType = $location->__get("type");
