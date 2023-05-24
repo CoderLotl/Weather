@@ -44,6 +44,7 @@ class Location
                 break;
             case 'clouds':
                 $this->clouds = $value;
+                break;
             case 'waterVapor':
                 $this->waterVapor = $value;
                 break;

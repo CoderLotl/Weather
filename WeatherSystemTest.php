@@ -53,7 +53,7 @@ for($i = 0; $i < 1; $i ++)
             //if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemdataAccess, "locs") == true)
             if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemDataAccessSQLite, "locs") == true)
             {
-                echo $newLocation . "\n-------\n";
+                //echo $newLocation . "\n-------\n";
             }        
         }
     }

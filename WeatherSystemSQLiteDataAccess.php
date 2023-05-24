@@ -81,7 +81,7 @@ class WeatherSystemSQLiteDataAccess
         $clouds = $location->__get("clouds");
         $waterVapor = $location->__get("waterVapor");
         $temperature = $location->__get("temperature");
-        $localWater = $location->__get("localWater");
+        $localWater = $location->__get("localWater");        
 
         $command = "UPDATE {$table} SET location_id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID}";
         $db->query($command);

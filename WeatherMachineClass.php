@@ -2,8 +2,7 @@
 
 class WeatherMachine
 {
-    // - - - CONTROL OF CONSTANT VARIABLES - - -
-
+    #region - - - CONTROL OF CONSTANT VARIABLES - - -
     // Chances Control
     private const blowingWindChances = 35;
     private const blowingWindReturn = 35; // The amount of water returned to the ground by 'some means'. The system doesn't contemplate the exitence of wind, but water has to return somehow and clouds have to go sometimes.
@@ -18,12 +17,12 @@ class WeatherMachine
     // Rain and Wind Control
     private const windAndRainCloudReduction = true;
     private const firstOrder = 1; // 1 = wind. 2 = rain.
-
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    #region TICK EXECUTION
     /**
      * @param mixed $season This is a numeric indicator of the season. The system uses from -42 to 42.
      * @param Location $location The current location-object.
@@ -93,16 +92,10 @@ class WeatherMachine
         {
             return false;
         }
-    }
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-    /* This function works with 2 arrays:
-        $lowDewTypes: this array has the numeric types of those locations where dew is gonna use the low atmosphere water vapor for the dew.
-        $highDewTypes: this array has the numeric types of those locations where dew is gonna use the clouds for the dew.
-
-        Both things can happen. This is useful to chew humidity from the rains in a subtle way, preventing some places from getting rain.
-    */
+    }    
+    #endregion
+    
+    #region DEW METHODS
     private function ApplyDewCalculations(Location $location)
     {        
         // WEATHER STAGES: [ 0: Not raining. 1: Dew. 2: Drizzle. 3: Light rain. 4: rain. 5: downpour. 6: storm.]
@@ -189,9 +182,9 @@ class WeatherMachine
             $location->__set("weather", 1); // If it's dewing and it wasn't, the weather is set to dew.
         }
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+    #region CLOUD METHODS
     private function CalcCloudification(Location $location, float $locationAdjustment = 0, int $temperatureAdjustment = 0)
     {        
         if($location->__get("waterVapor") > 1)
@@ -220,7 +213,7 @@ class WeatherMachine
         $clouds = $location->__get("clouds");
 
         $cloudification = $this->CalcCloudification($location, 0, 10);
-        $cloudification = $this->CalcCloudification($location, 0, 10);
+        echo "\n\n<<<< cloudification: {$cloudification} >>>>\n";        
 
         if($cloudification != 0)
         {
@@ -234,9 +227,9 @@ class WeatherMachine
             }
         }
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+    #region EVAPORATION METHODS
     private function CalcWaterEvaporation(Location $location, float $locationAdjustment = 0)
     {
         if($location->__get("localWater") > 1)
@@ -264,7 +257,9 @@ class WeatherMachine
         $localWater = $location->__get("localWater");
         $waterVapor = $location->__get("waterVapor");
 
-        $waterEvaporation = $this->CalcWaterEvaporation($location);        
+        $waterEvaporation = $this->CalcWaterEvaporation($location);
+
+        echo "\n\n<<<< evaporation: {$waterEvaporation} >>>>\n\n";
 
         if($waterEvaporation != 0)
         {
@@ -278,7 +273,7 @@ class WeatherMachine
             }
         }        
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     public function CalcSaturationPointTemp(Location $location)
