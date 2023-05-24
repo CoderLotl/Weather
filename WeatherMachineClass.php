@@ -2,9 +2,10 @@
 
 class WeatherMachine
 {
+    /////////////////////////////////////////////////////////////
     #region - - - CONTROL OF CONSTANT VARIABLES - - -
     // Chances Control
-    private const blowingWindChances = 35;
+    private const blowingWindChances = 35; // The chances of some 'wind' actually returning some water to the ground without actual rain.
     private const blowingWindReturn = 35; // The amount of water returned to the ground by 'some means'. The system doesn't contemplate the exitence of wind, but water has to return somehow and clouds have to go sometimes.
     private const dewFactor = 35; // The percentage of water vapor that returns back to the ground in the form of dew.
     private const precipitationFactor = 35; // Similar to the above, this controls the percentage of water returned to ground by the rain.
@@ -15,7 +16,7 @@ class WeatherMachine
     private const highDewTypes = array(4); // The types of locations which have cloud dew.
     
     // Rain and Wind Control
-    private const windAndRainCloudReduction = true;
+    private const windAndRainCloudReduction = true; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
     private const firstOrder = 1; // 1 = wind. 2 = rain.
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -24,6 +25,7 @@ class WeatherMachine
 
     #region TICK EXECUTION
     /**
+     * Executes a weather tick on a given location passed by param. This function targets a MySQL database.
      * @param mixed $season This is a numeric indicator of the season. The system uses from -42 to 42.
      * @param Location $location The current location-object.
      * @param mixed $dayStage A string indicating the day stage.
@@ -56,6 +58,7 @@ class WeatherMachine
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     /**
+     * Executes a weather tick on a given location passed by param. This function targets a SQLite database.
      * @param mixed $season - This is a numeric indicator of the season. The system uses from -42 to 42.
      * @param Location $location - The current location-object.
      * @param mixed $dayStage - A string indicating the day stage.
@@ -96,10 +99,13 @@ class WeatherMachine
     #endregion
     
     #region DEW METHODS
+    /**
+     * Calculates the dew chances and sets the dew at the location passed by params if it's due.
+     * @param Location $location     
+     */
     private function ApplyDewCalculations(Location $location)
     {        
-        // WEATHER STAGES: [ 0: Not raining. 1: Dew. 2: Drizzle. 3: Light rain. 4: rain. 5: downpour. 6: storm.]
-        
+        // WEATHER STAGES: [ 0: Not raining. 1: Dew. 2: Drizzle. 3: Light rain. 4: rain. 5: downpour. 6: storm.]      
 
         $previousWeather = $location->__get("weather");
         $lowerAtmosphereDew = false;
@@ -124,8 +130,15 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-    // This function has 2 uses: the param '$source' tells the function if it has to use the 'water vapor', which is present at the lower atmosphere,
-    // or if it has to use the 'clouds' as the humidity source. - This is useful to chew on the clouds amount without causing rain directly.
+    /**
+     * This function has 2 uses: the param '$source' tells the function if it has to use the 'water vapor', which is present at the lower atmosphere,
+     * or if it has to use the 'clouds' as the humidity source. - This is useful to chew on the clouds amount without causing rain directly.
+     * @param Location $location
+     * @param string $source
+     * @param bool $lowerAtmosphereDew
+     * 
+     * @return [type]
+     */
     private function ExecuteDewPrecipitation(Location $location, string $source, bool $lowerAtmosphereDew)
     {
         // - - - SELECTION OF ATMOSPHERIC LEVEL - - -
@@ -185,6 +198,14 @@ class WeatherMachine
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     #region CLOUD METHODS
+    /**
+     * Calculates the amount of water vapor that's going to turn into clouds. This can only happen if the water vapor is above 1.
+     * @param Location $location
+     * @param float $locationAdjustment
+     * @param int $temperatureAdjustment
+     * 
+     * @return int
+     */
     private function CalcCloudification(Location $location, float $locationAdjustment = 0, int $temperatureAdjustment = 0)
     {        
         if($location->__get("waterVapor") > 1)
@@ -207,13 +228,18 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    /**
+     * Applies the cloudification procces, which is the process of turning water vapor into clouds.
+     * @param Location $location
+     * 
+     * @return [type]
+     */
     private function ApplyCloudification(Location $location)
     {
         $waterVapor = $location->__get("waterVapor");
         $clouds = $location->__get("clouds");
 
-        $cloudification = $this->CalcCloudification($location, 0, 10);
-        echo "\n\n<<<< cloudification: {$cloudification} >>>>\n";        
+        $cloudification = $this->CalcCloudification($location, 0, 10);             
 
         if($cloudification != 0)
         {
@@ -230,6 +256,14 @@ class WeatherMachine
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     #region EVAPORATION METHODS
+    /**
+     * Calculates the evaporation of ground level water. Returns the amount of water that should turn into water vapor.
+     * Ground water must be greater than 1 for this to happen.
+     * @param Location $location
+     * @param float $locationAdjustment
+     * 
+     * @return [type]
+     */
     private function CalcWaterEvaporation(Location $location, float $locationAdjustment = 0)
     {
         if($location->__get("localWater") > 1)
@@ -252,14 +286,18 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     
+    /**
+     * Calculates the water evaporation and moves the water vapor to the lower atmosphere, reducing the amount of ground level water.
+     * @param Location $location
+     * 
+     * @return [type]
+     */
     public function ApplyWaterEvaporation(Location $location)
     {
         $localWater = $location->__get("localWater");
         $waterVapor = $location->__get("waterVapor");
 
-        $waterEvaporation = $this->CalcWaterEvaporation($location);
-
-        echo "\n\n<<<< evaporation: {$waterEvaporation} >>>>\n\n";
+        $waterEvaporation = $this->CalcWaterEvaporation($location);        
 
         if($waterEvaporation != 0)
         {
@@ -275,7 +313,13 @@ class WeatherMachine
     }
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+    #region UTILITIES
+    /**
+     * Calculates the saturation point temperature for a given humidity.
+     * @param Location $location
+     * 
+     * @return [type]
+     */
     public function CalcSaturationPointTemp(Location $location)
     {
         $temperature = $location->__get("temperature");
@@ -292,6 +336,12 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    /**
+     * Calculates the saturation point humidity for the given temperature.
+     * @param mixed $temperature
+     * 
+     * @return [type]
+     */
     public function CalcSaturationPoint($temperature)
     {
         $baseEquation = 8.07131 - 1730.63 / (233.426 + $temperature);
@@ -301,6 +351,12 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    /**
+     * Calculates the relative humidity based on the current temperature and humidity.
+     * @param Location $location
+     * 
+     * @return [type]
+     */
     public function CalcRelativeHumidity(Location $location)
     {
         $waterVapor = $location->__get("waterVapor");
@@ -311,7 +367,7 @@ class WeatherMachine
         
         return number_format( ($waterVapor / $saturationPoint * 100 ), 3, '.', '' );
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     private function CalcNewWeather(Location $location)
@@ -441,6 +497,12 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    /**
+     * Returns a package of parameters based on the location type. Those parameters are meant to be consumed later by other formulas.
+     * @param mixed $locationType
+     * 
+     * @return TemperatureParameters
+     */
     private function SetParamsByLocation($locationType)
     {
         // This part calculates the average temperatures by Location.
@@ -515,6 +577,15 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    /**
+     * Calculates the new temperature for the location based on the season factor, the location type, the day stage, and the weather.
+     * @param int $season
+     * @param int $locationType
+     * @param string $dayStage
+     * @param mixed $weather
+     * 
+     * @return [type]
+     */
     private function CalcNewTemperature(int $season, int $locationType, string $dayStage, $weather)
     {
         // NOTE: Temperatures are in C here. For a F value there needs to be a conversion step.
