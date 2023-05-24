@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Connects with a given SQLite DB where the tables where the season and locations are stored.
+ * Provides public functions to read and write both season's and location's data.
+ */
 class WeatherSystemSQLiteDataAccess
 {
     private static $DBPath;

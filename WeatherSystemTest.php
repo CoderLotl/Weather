@@ -33,11 +33,11 @@ $weatherMachine = new WeatherMachine();
 //$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
 //$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
 
-WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db");
+WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db"); // Setting the database we're gonna work with.
 $weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess();
-$seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds");
+$seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
 
-$day = [/*'midnight', 'night', 'dawn', 'morning',*/ 'midday'/*, 'afternoon', 'evening', 'dusk', 'night'*/];
+$day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
 
 for($i = 0; $i < 1; $i ++)
 {
@@ -53,7 +53,7 @@ for($i = 0; $i < 1; $i ++)
             //if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemdataAccess, "locs") == true)
             if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemDataAccessSQLite, "locs") == true)
             {
-                //echo $newLocation . "\n-------\n";
+                echo $newLocation . "\n-------\n";
             }        
         }
     }

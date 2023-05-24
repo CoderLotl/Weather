@@ -16,7 +16,7 @@ class WeatherMachine
     private const highDewTypes = array(4); // The types of locations which have cloud dew.
     
     // Rain and Wind Control
-    private const windAndRainCloudReduction = true; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
+    private const windAndRainCloudReduction = false; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
     private const firstOrder = 1; // 1 = wind. 2 = rain.
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -83,9 +83,9 @@ class WeatherMachine
             $this->ApplyCloudification($location);
 
             // CALCULATING AND SETTING THE NEW WEATHER
-            //$this->CalcNewWeather($location);
+            $this->CalcNewWeather($location);
 
-            //$this->ApplyDewCalculations($location);
+            $this->ApplyDewCalculations($location);
 
             $weatherSystemdataAccess->WriteLocationDataToDB($location, $table);
 
@@ -216,7 +216,7 @@ class WeatherMachine
             $slopeAdjustment = 10; // This param controls the function's slope around 0. The bigger this param, the softer the slope.
             $locationAdjustment = 0;
 
-            $cloudification = $heightAdjustment * atan(($temperature - $temperatureAdjustment)/$slopeAdjustment) * log($waterVapor) + $locationAdjustment;            
+            $cloudification = $heightAdjustment * atan(($temperature + $temperatureAdjustment)/$slopeAdjustment) * log($waterVapor) + $locationAdjustment;            
         }
         else
         {
@@ -370,25 +370,29 @@ class WeatherMachine
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    /**
+     * 
+     * @param Location $location
+     * 
+     * @return [type]
+     */
     private function CalcNewWeather(Location $location)
     {
         echo "\n-----------------------------";
         if($this::firstOrder == 1)
         {
-            $windCloudReduction = $this->CheckForBlowingWind($location);
-
-            if($this::windAndRainCloudReduction == true || ($this::windAndRainCloudReduction == false && $windCloudReduction == false))
+            if($this::windAndRainCloudReduction == true)
             {
-                $chancesOfRain = $this->CalcRainChances($location);
-                if(random_int(0, 100) <= $chancesOfRain)
+                if($this->CheckForBlowingWind($location) == true)
                 {
-                    $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::precipitationFactor / 100);
-                    echo "\nWater moved by the rain: " . $returningWater;
-                    echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
-                    $location->__set("localWater", $location->__get("localWater") + $returningWater);
-                    echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
-                    $location->__set("clouds", $location->__get("clouds") - $returningWater);
+                    $this->BlowSomeWind($location);
                 }
+            }
+
+            $chancesOfRain = $this->CalcRainChances($location);
+            if(random_int(0, 100) <= $chancesOfRain)
+            {
+                $this->CastSomeRain($location);
             }
         }
         else
@@ -396,21 +400,19 @@ class WeatherMachine
             $chancesOfRain = $this->CalcRainChances($location);
             if(random_int(0, 100) <= $chancesOfRain)
             {
-                $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::precipitationFactor / 100);
-                echo "\nWater moved by the rain: " . $returningWater;
-                echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
-                $location->__set("localWater", $location->__get("localWater") + $returningWater);
-                $location->__set("clouds", $location->__get("clouds") - $returningWater);
-                echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
+                $this->CastSomeRain($location);
                 $rainCloudReduction = true;
             }
             else
             {
                 $rainCloudReduction = false;
             }
-            if($this::windAndRainCloudReduction == true || ($this::windAndRainCloudReduction == false && $rainCloudReduction == false))
+            if($this::windAndRainCloudReduction == true && $rainCloudReduction == false) // If the winds are to reduce the clouds and it hasn't rain at this tick...
             {
-                $this->CheckForBlowingWind($location);                
+                if($this->CheckForBlowingWind($location))
+                {
+                    $this->BlowSomeWind($location);
+                }
             }
         }
         echo "\n-----------------------------";   
@@ -421,12 +423,9 @@ class WeatherMachine
     private function CalcRainChances(Location $location)
     {
         $clouds = $location->__get("clouds");
-        if($clouds > 2)
+        if($clouds > 2 && $clouds <= 100)
         {
-            if($clouds <= 100)
-            {
-                $chancesOfRain = $clouds-2;
-            }
+            $chancesOfRain = $clouds-2;
         }
         elseif($clouds <= 2)
         {
@@ -440,24 +439,38 @@ class WeatherMachine
         return $chancesOfRain;
     }
 
+    private function CastSomeRain(Location $location)
+    {
+        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::precipitationFactor / 100);
+        echo "\nWater moved by the rain: " . $returningWater;
+        echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
+        $location->__set("localWater", $location->__get("localWater") + $returningWater);
+        echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
+        $location->__set("clouds", $location->__get("clouds") - $returningWater);
+    }
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     private function CheckForBlowingWind(Location $location)
     {
         if(random_int(0,100) <= $this::blowingWindChances)
         {
-            $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::blowingWindReturn / 100);
-            echo "\nWater moved by the winds: " . $returningWater;
-            echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
-            $location->__set("localWater", $location->__get("localWater") + $returningWater);
-            $location->__set("clouds", $location->__get("clouds") - $returningWater);
-            echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
             return true;
         }
         else
         {
             return false;
         }
+    }
+
+    private function BlowSomeWind(Location $location)
+    {
+        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::blowingWindReturn / 100);
+        echo "\nWater moved by the winds: " . $returningWater;
+        echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
+        $location->__set("localWater", $location->__get("localWater") + $returningWater);
+        $location->__set("clouds", $location->__get("clouds") - $returningWater);
+        echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
