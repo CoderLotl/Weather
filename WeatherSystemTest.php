@@ -25,9 +25,12 @@ WATER:
 // - - - - - - - - - - -
 
 $weatherMachine = new WeatherMachine();
+
 //$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
-$weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess("WeatherTest.db");
 //$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
+
+WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db");
+$weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess();
 $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds");
 
 $day = [/*'midnight', 'night', 'dawn', 'morning',*/ 'midday'/*, 'afternoon', 'evening', 'dusk', 'night'*/];

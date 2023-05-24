@@ -1,33 +1,35 @@
 <?php
 class WeatherSystemDataAccess
 {    
-    private $hostname;
-    private $username;
-    private $password;
-    private $database;
+    private static $hostname;
+    private static $username;
+    private static $password;
+    private static $database;
 
-    public function __construct(string $hostname, string $username, string $password, string $database)
+    public static function SetParams(string $hostname, string $username, string $password, string $database)
     {
-        $this->username = $username;
-        $this->password = $password;
-        $this->database = $database;
+        WeatherSystemDataAccess::$hostname = $hostname;
+        WeatherSystemDataAccess::$username = $username;
+        WeatherSystemDataAccess::$password = $password;
+        WeatherSystemDataAccess::$database = $database;
     }
 
-    public function GetHostname()
+    public static function GetParams($name)
     {
-        return $this->hostname;
-    }
-    public function GetUsername()
-    {
-        return $this->username;
-    }
-    public function GetPassword()
-    {
-        return $this->password;
-    }
-    public function GetDatabase()
-    {
-        return $this->database;
+        switch($name)
+        {
+            case 'hostname':
+                return WeatherSystemDataAccess::$hostname;
+            case 'username':
+                return WeatherSystemDataAccess::$username;
+            case 'password':
+                return WeatherSystemDataAccess::$password;
+            case 'database':
+                return WeatherSystemDataAccess::$database;
+            default:
+                echo "The attribute doesn't exist.";
+                return false;
+        }
     }
 
     public function ReadSeasonDataFromDB(string $table)
@@ -130,13 +132,13 @@ class WeatherSystemDataAccess
     {
         $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
 
-        $locationID = $location->GetID();        
-        $locationType = $location->GetLocationType();
-        $weather = $location->GetWeather();
-        $clouds = $location->GetClouds();
-        $waterVapor = $location->GetWaterVapor();
-        $temperature = $location->GetTemperature();
-        $localWater = $location->GetLocalWater();
+        $locationID = $location->__get('id');
+        $locationType = $location->__get('type');
+        $weather = $location->__get('weather');
+        $clouds = $location->__get('clouds');
+        $waterVapor = $location->__get('waterVapor');
+        $temperature = $location->__get('temperature');
+        $localWater = $location->__get('localWater');
 
         $command = "UPDATE {$table} SET id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE id = {$locationID}";
         $mysqli->query($command);

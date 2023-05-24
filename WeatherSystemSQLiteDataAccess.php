@@ -2,16 +2,16 @@
 
 class WeatherSystemSQLiteDataAccess
 {
-    private $DBPath;
+    private static $DBPath;
 
-    public function __construct(string $DBPath)
+    public static function SetDBPath(string $dbPath)
     {
-        $this->DBPath = $DBPath;
+        WeatherSystemSQLiteDataAccess::$DBPath = $dbPath;
     }
 
-    public function GetDBPath()
+    public static function GetDBPath()
     {
-        return $this->DBPath;
+        return WeatherSystemSQLiteDataAccess::$DBPath;
     }
 
     public function ReadSeasonDataFromDB(string $table)

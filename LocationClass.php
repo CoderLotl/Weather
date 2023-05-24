@@ -2,7 +2,7 @@
 
 class Location
 {
-    // - - - ATTRIBUTES
+    #region ATTRIBUTES
     private $locationID;    // Discretional
     private $locationName;  // Discretional (too).
     private $locationType;  // 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
@@ -11,8 +11,8 @@ class Location
     private $waterVapor;      // Amount of water in gaseous form. This is the Absolute Humidity.
     private $temperature;   // The location's current ambience temperature.
     private $localWater;    // The amount of water in liquid state at the location. Rivers, pools, lakes, whatever.    
-
-    // - - - CONSTRUCTOR
+    #endregion
+    #region CONSTRUCTOR
     public function __construct(int $locationID, string $locationName, int $locationType, int $weather, float $clouds, float $waterVapor, int $temperature, float $localWater)
     {
         $this->locationID = $locationID;
@@ -24,8 +24,8 @@ class Location
         $this->temperature = $temperature;
         $this->localWater = $localWater;
     }
-
-    // - - - PROPERTIES
+    #endregion
+    #region PROPERTIES
     public function __set($name, $value)
     {
         switch($name)
@@ -76,9 +76,10 @@ class Location
             case 'localWater':
                 return $this->localWater;
         }        
-    }    
-
-    // - - - MISC
+    }
+    #endregion    
+    #region MISC
+    
     public function __toString()
     {
         $clouds = $this->TranslateCloudsValue();
@@ -89,14 +90,18 @@ class Location
         $saturationPointTemp = $weatherMachine->CalcSaturationPointTemp($this);
         $weather = $this->TranslateWeather();
         $weather = $this->TranslateWeather();
-
-        return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nWeather: {$weather}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
+                
         return "Location ID: {$this->locationID}\nLocation Name: {$this->locationName}\nSky: {$clouds} | Clouds: {$cloudsValue}\nWeather: {$weather}\nTemperature: {$this->temperature}°C | " . ((($this->temperature * 9) / 5) + 32) . "°F"
         . "\nWater Vapor: {$this->waterVapor} g/m3 | Water Vapor Saturation point: {$saturationPoint} g/m3\nRelative Humidity: {$relativeHumidity}%" . 
         " | Saturation Temp for this humidity: {$saturationPointTemp}°C\nLocal Water: {$this->__get("localWater")}.";
     }
+    #endregion
+    #region METHODS
 
-    // - - - METHODS
+    /**
+     * Reads the location's numeric value for weather and returns a string.
+     * @return string
+     */
     private function TranslateWeather()
     {
         // WEATHER STAGES: [ 0: Not raining. 1: Dew. 2: Drizzle. 3: Light rain. 4: rain. 5: downpour. 6: storm.]
@@ -130,6 +135,10 @@ class Location
         return $returnValue;
     }
 
+    /**
+     * Reads the location's numeric value for the clouds and returns a string.
+     * @return string
+     */
     private function TranslateCloudsValue()
     {
         $returnValue = "";
@@ -160,6 +169,7 @@ class Location
         }
         return $returnValue;
     }
+    #endregion
 }
 
 ?>
