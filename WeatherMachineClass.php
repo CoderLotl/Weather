@@ -36,7 +36,7 @@ class WeatherMachine
      */
     public function ExecuteWeatherTick($season, Location $location, $dayStage, WeatherSystemDataAccess $WeatherSystemdataAccess, string $table)
     {
-        if($location->__get("type") != -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
+        if($location->__get("type") !== -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
         {
             // CALCULATING AND SETTING THE NEW TEMPERATURE
             $temperature = $this->CalcNewTemperature($season, $location->__get("type"), $dayStage, $location->__get("weather"));
@@ -116,7 +116,7 @@ class WeatherMachine
             {
                 $this->ExecuteDewPrecipitation($location, "waterVapor", $lowerAtmosphereDew); // ... I check for low atm. dew.
     
-                if($location->__get("weather") == 1 && $previousWeather == 0) // If it was not dewing and it's dewing now at the lower atmosphere...
+                if($location->__get("weather") === 1 && $previousWeather === 0) // If it was not dewing and it's dewing now at the lower atmosphere...
                 {
                     $lowerAtmosphereDew = true; // ... the dew is happening at the lower atmosphere.
                 }
@@ -142,7 +142,7 @@ class WeatherMachine
     private function ExecuteDewPrecipitation(Location $location, string $source, bool $lowerAtmosphereDew)
     {
         // - - - SELECTION OF ATMOSPHERIC LEVEL - - -
-        if($source == "waterVapor")
+        if($source === "waterVapor")
         {
             $humiditySource = $location->__get("waterVapor");
             $temperature = $location->__get("temperature");
@@ -183,14 +183,14 @@ class WeatherMachine
 
         // - - - WEATHER SETTING - - -
         // If it's not going to dew and the weather says it was dewing previously...
-        if($dew == false && $location->__get("weather") == 1)
+        if($dew === false && $location->__get("weather") === 1)
         {
-            if($lowerAtmosphereDew == false) // ... and if the dew is not from the lower atmosphere ...
+            if($lowerAtmosphereDew === false) // ... and if the dew is not from the lower atmosphere ...
             {
                 $location->__set("weather", 0); // ... then the weather is cleared.
             }            
         }
-        if($dew == true && $location->__get("weather") == 0)
+        if($dew === true && $location->__get("weather") === 0)
         {
             $location->__set("weather", 1); // If it's dewing and it wasn't, the weather is set to dew.
         }
@@ -241,7 +241,7 @@ class WeatherMachine
 
         $cloudification = $this->CalcCloudification($location, 0, 10);             
 
-        if($cloudification != 0)
+        if($cloudification !== 0)
         {
             if($waterVapor >= $cloudification)
             {
@@ -299,7 +299,7 @@ class WeatherMachine
 
         $waterEvaporation = $this->CalcWaterEvaporation($location);        
 
-        if($waterEvaporation != 0)
+        if($waterEvaporation !== 0)
         {
             if($localWater >= $waterEvaporation)
             {
@@ -379,11 +379,11 @@ class WeatherMachine
     private function CalcNewWeather(Location $location)
     {
         echo "\n-----------------------------";
-        if($this::firstOrder == 1)
+        if($this::firstOrder === 1)
         {
-            if($this::windAndRainCloudReduction == true)
+            if($this::windAndRainCloudReduction === true)
             {
-                if($this->CheckForBlowingWind($location) == true)
+                if($this->CheckForBlowingWind($location) === true)
                 {
                     $this->BlowSomeWind($location);
                 }
@@ -407,7 +407,7 @@ class WeatherMachine
             {
                 $rainCloudReduction = false;
             }
-            if($this::windAndRainCloudReduction == true && $rainCloudReduction == false) // If the winds are to reduce the clouds and it hasn't rain at this tick...
+            if($this::windAndRainCloudReduction === true && $rainCloudReduction === false) // If the winds are to reduce the clouds and it hasn't rain at this tick...
             {
                 if($this->CheckForBlowingWind($location))
                 {
