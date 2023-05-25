@@ -445,8 +445,8 @@ class WeatherMachine
         echo "\nWater moved by the rain: " . $returningWater;
         echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
         $location->__set("localWater", $location->__get("localWater") + $returningWater);
-        echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
         $location->__set("clouds", $location->__get("clouds") - $returningWater);
+        echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
