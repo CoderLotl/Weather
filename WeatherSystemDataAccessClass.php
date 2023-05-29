@@ -5,13 +5,14 @@ class WeatherSystemDataAccess
     private static $username;
     private static $password;
     private static $database;
+    private static $dbConnection;
 
-    public static function SetDBParams(string $hostname, string $username, string $password, string $database)
+    public static function SetDBParams(string $hostname, string $username = null, string $password = null, string $database)
     {
-        WeatherSystemDataAccess::$hostname = $hostname;
-        WeatherSystemDataAccess::$username = $username;
-        WeatherSystemDataAccess::$password = $password;
-        WeatherSystemDataAccess::$database = $database;
+        self::$hostname = $hostname;
+        self::$username = $username;
+        self::$password = $password;        
+        self::$database = $database;        
     }
 
     public static function GetDBParams($name)
@@ -34,11 +35,10 @@ class WeatherSystemDataAccess
 
     public function ReadSeasonDataFromDB(string $table)
     {
-        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);        
-
+        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
         try
         {
-            $mysqli->select_db($this->database) or die( "Unable to select database.");
+            $mysqli->select_db(self::$database) or die( "Unable to select database.");
             $data = $mysqli->query("SELECT season_day, season_direction FROM {$table}");
 
             $mysqli->close();
@@ -77,7 +77,7 @@ class WeatherSystemDataAccess
 
     public function WriteSeasonDataToDB(SeasonControl $seasonControl, string $table)
     {
-        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
+        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
 
         $day = $seasonControl->GetDay();
         if($seasonControl->GetGoingForward() == false)
@@ -97,13 +97,13 @@ class WeatherSystemDataAccess
     public function ReadLocationDataFromDB(string $table)
     {
         $locationArray = array();
-        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
+        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
 
         try
         {
-            $mysqli->select_db($this->database) or die( "Unable to select database.");
+            $mysqli->select_db(self::$database) or die( "Unable to select database.");
 
-            $data = $mysqli->query("SELECT id, ". "name" . ", location_type, weather, clouds, water_vapor, temperature, local_water FROM {$table}");
+            $data = $mysqli->query("SELECT location_id, location_name, location_type, weather, clouds, water_vapor, temperature, local_water FROM {$table}");
 
             $mysqli->close();
 
@@ -111,7 +111,7 @@ class WeatherSystemDataAccess
             {
                 while($row = $data->fetch_array())
                 {            
-                    $location = new Location($row['id'], $row['name'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
+                    $location = new Location($row['location_id'], $row['location_name'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
                     array_push($locationArray, $location);
                 }
             }
@@ -130,7 +130,7 @@ class WeatherSystemDataAccess
 
     public function WriteLocationDataToDB(Location $location, string $table)
     {
-        $mysqli = new mysqli($this->hostname, $this->username, $this->password, $this->database);
+        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
 
         $locationID = $location->__get('id');
         $locationType = $location->__get('type');
@@ -140,7 +140,7 @@ class WeatherSystemDataAccess
         $temperature = $location->__get('temperature');
         $localWater = $location->__get('localWater');
 
-        $command = "UPDATE {$table} SET id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE id = {$locationID}";
+        $command = "UPDATE {$table} SET location_id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID}";
         $mysqli->query($command);
     }
 }

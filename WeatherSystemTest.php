@@ -28,45 +28,92 @@ require('LocationClass.php');
 // - - - [ TEST ] - - - * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // - - - - - - - - - - -
 
-$weatherMachine = new WeatherMachine();
-
 //$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
 //$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
 
-WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db"); // Setting the database we're gonna work with.
-$weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess();
-$seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
+$option = 2; // 1 = SQLITE - - - 2 = MYSQL
 
-$day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
-//$day = ['midday'];
+$weatherMachine = new WeatherMachine();
+$locationArray = '';
+$seasonControl = '';
+$weatherSystemDataAccessSQLite = '';
+$weatherSystemdataAccess = '';
 
-for($i = 0; $i < 1; $i ++)
+switch($option)
+{
+    case 1: // SQLITE
+        WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db"); // Setting the database we're gonna work with.
+        $weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess();
+        $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
+        break;
+    case 2: // MYSQL
+        WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test');
+        $weatherSystemdataAccess = new WeatherSystemDataAccess();
+        $seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
+        break;
+}
+
+//$day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
+$day = ['midday'];
+
+
+for($i = 0; $i < 1000; $i ++)
 {
     foreach($day as $dayStage)
     {
         echo "\n*** LOCATION BLOCK ***";
         echo "\nDay Stage: {$dayStage}";
-        //$locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
-        $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+        switch($option)
+        {
+            case 1: // SQLITE
+                $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+                break;
+            case 2: // MYSQL
+                $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
+                break;
+        }        
         echo "\nLocations:\n\n";
+        //var_dump($locationArray);
+        
         foreach($locationArray as $newLocation)
         {
-            //if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemdataAccess, "locs") == true)
-            if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage) == true)
+            if($option === 2)
             {
-                $weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
-                echo $newLocation . "\n-------\n";
+                if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage) == true)
+                {
+                    $weatherSystemdataAccess->WriteLocationDataToDB($newLocation, 'locs');
+                    echo $newLocation . "\n-------\n";
 
-                if( ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor')) > 17)
-                {
-                    die('ERROR HERE!!');
+                    if( ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor')) > 17)
+                    {
+                        die('ERROR HERE!!');
+                    }
+                    else
+                    {
+                        $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                        echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
+                    }
                 }
-                else
+            }
+            else
+            {
+                if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage) == true)
                 {
-                    $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
-                    echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
-                }
-            }        
+                    $weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
+                    echo $newLocation . "\n-------\n";
+    
+                    if( ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor')) > 17)
+                    {
+                        die('ERROR HERE!!');
+                    }
+                    else
+                    {
+                        $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                        echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
+                    }
+                }       
+            }            
         }
+        
     }
 }
