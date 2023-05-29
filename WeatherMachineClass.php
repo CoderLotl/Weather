@@ -19,7 +19,7 @@ class WeatherMachine
     private const windAndRainCloudReduction = true; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
     private const firstOrder = 1; // 1 = wind. 2 = rain.
     private const placesWithNoRain = [4, 7]; // The location types id of those places where you don't want it to rain.
-    private const placesWithNoWind = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // The location types id of those places where you don't want it to be any wind.
+    private const placesWithNoWind = [1, 2, 3, 5, 6, 8, 9, 10, 11]; // The location types id of those places where you don't want it to be any wind.
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -159,9 +159,13 @@ class WeatherMachine
             $temperature = $location->__get("temperature");
         }
 
+        // -----------------------------------------------
+
         // - - - VARIABLES - - -                        
         $saturationPoint = $this->CalcSaturationPoint($temperature);
-        $dew = false;        
+        $dew = false; // dew flag
+
+        // -----------------------------------------------
 
         // - - - EXECUTION - - -
         // If humiditySource is over 1, and it's over or at the saturation point...
@@ -170,7 +174,7 @@ class WeatherMachine
             // - - - DEW EXECUTION - - -
             $dewAmount = ($humiditySource * $this::dewFactor) / 100;
 
-            if($source = "waterVapor")
+            if($source === "waterVapor")
             {
                 $location->__set("waterVapor", $humiditySource - $dewAmount); // Substraction of dew from the water vapor.
             }
@@ -396,7 +400,7 @@ class WeatherMachine
             }
 
             $chancesOfRain = $this->CalcRainChances($location);
-            if(random_int(0, 100) <= $chancesOfRain)
+            if($chancesOfRain!= false && random_int(0, 100) <= $chancesOfRain)
             {
                 $this->CastSomeRain($location);
             }
@@ -408,7 +412,7 @@ class WeatherMachine
         else
         {
             $chancesOfRain = $this->CalcRainChances($location);
-            if(random_int(0, 100) <= $chancesOfRain)
+            if($chancesOfRain!= false && random_int(0, 100) <= $chancesOfRain)
             {
                 $this->CastSomeRain($location);
                 $rainCloudReduction = true;
@@ -422,7 +426,7 @@ class WeatherMachine
             {
                 if($this->CheckForBlowingWind($location))
                 {
-                    $this->BlowSomeWind($location);
+                    $this->BlowSomeWind($location);                    
                 }
             }
         }
@@ -437,7 +441,7 @@ class WeatherMachine
         {
             if($location->__get('type') === $placeType)
             {
-                return 0; // If the place's type is on the list of places with no rain, the chances of rain are 0.
+                return false; // If the place's type is on the list of places with no rain, the chances of rain are 0.
             }
         }
         $clouds = $location->__get("clouds");
@@ -502,7 +506,7 @@ class WeatherMachine
         foreach($this::placesWithNoWind as $placeType)
         {
             if($location->__get('type') === $placeType)
-            {
+            {                
                 return false; // If the place's type is on the list of places with no wind, there will be no wind.
             }
         }

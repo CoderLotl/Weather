@@ -38,6 +38,7 @@ $weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess();
 $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
 
 $day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
+//$day = ['midday'];
 
 for($i = 0; $i < 1; $i ++)
 {
@@ -55,6 +56,16 @@ for($i = 0; $i < 1; $i ++)
             {
                 $weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
                 echo $newLocation . "\n-------\n";
+
+                if( ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor')) > 17)
+                {
+                    die('ERROR HERE!!');
+                }
+                else
+                {
+                    $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                    echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
+                }
             }        
         }
     }
