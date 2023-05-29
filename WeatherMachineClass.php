@@ -453,12 +453,37 @@ class WeatherMachine
         $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::precipitationFactor / 100);
 
         // HERE I HAVE TO SET THE NEW WEATHER. PROBABLY BASED ON THE AMOUNT OF WATER MOVED.
+        $location->__set('weather', $this->CalculateRainIntensity($returningWater));
 
         echo "\nWater moved by the rain: " . $returningWater;
         echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
         $location->__set("localWater", $location->__get("localWater") + $returningWater);
         $location->__set("clouds", $location->__get("clouds") - $returningWater);
         echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
+    }
+
+    private function CalculateRainIntensity(float $returningWater)
+    {
+        if($returningWater <= 20)
+        {
+            return 2;
+        }
+        elseif($returningWater <= 40 && $returningWater >= 20)
+        {
+            return 3;
+        }
+        elseif($returningWater <= 60 && $returningWater >= 40)
+        {
+            return 4;
+        }
+        elseif($returningWater <= 60 && $returningWater >= 80)
+        {
+            return 5;
+        }
+        else
+        {
+            return 6;
+        }
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -487,37 +512,33 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+    /**
+     * Returns an index to work at based on the name of the day stage. This is only used at the CalcNewTemperature function.
+     * @param string $dayStage
+     * 
+     * @return int
+     */
     private function ReturnIndexByDayStage(string $dayStage)
     {
         switch($dayStage)
         {
             case 'midnight':
-                $indexToReturn = 0;
-                break;
+                return 0;                
             case 'night':
-                $indexToReturn = 1;
-                break;
+                return 1;                
             case 'dawn':
-                $indexToReturn = 2;
-                break;
+                return 2;                
             case 'morning':
-                $indexToReturn = 3;
-                break;
+                return 3;                
             case 'midday':
-                $indexToReturn = 4;
-                break;
+                return 4;                
             case 'afternoon':
-                $indexToReturn = 5;
-                break;
+                return 5;                
             case 'evening':
-                $indexToReturn = 6;
-                break;
+                return 6;                
             case 'dusk':
-                $indexToReturn = 7;
-                break;
-        }
-
-        return $indexToReturn;
+                return 7;                
+        }        
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
