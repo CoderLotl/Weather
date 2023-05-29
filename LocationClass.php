@@ -62,6 +62,11 @@ class Location
         }
     }
 
+    /**
+     * @param mixed $name id, name, type, weather, clouds, waterVapor, temperature, localWater.
+     * 
+     * @return [type] int, string, int, int, float, float, float, float.
+     */
     public function __get($name)
     {        
         switch($name)

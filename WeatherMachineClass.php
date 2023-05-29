@@ -12,12 +12,14 @@ class WeatherMachine
     
     // Dew Control
     // Types of locations: 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
-    private const lowDewTypes = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11); // The types of locations which have low atmosphere dew.
-    private const highDewTypes = array(4); // The types of locations which have cloud dew.
+    private const lowDewTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // The types of locations which have low atmosphere dew.
+    private const highDewTypes = [4, 7]; // The types of locations which have cloud dew.
     
     // Rain and Wind Control
     private const windAndRainCloudReduction = false; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
     private const firstOrder = 1; // 1 = wind. 2 = rain.
+    private const placesWithNoRain = [4, 7]; // The location types id of those places where you don't want it to rain.
+    private const placesWithNoWind = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // The location types id of those places where you don't want it to be any wind.
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -373,7 +375,7 @@ class WeatherMachine
     }
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+    #region WEATHER
     /**
      * 
      * @param Location $location
@@ -426,11 +428,18 @@ class WeatherMachine
         }
         echo "\n-----------------------------";   
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+    #region RAIN
     private function CalcRainChances(Location $location)
     {
+        foreach($this::placesWithNoRain as $placeType)
+        {
+            if($location->__get('type') == $placeType)
+            {
+                return 0; // If the place's type is on the list of places with no rain, the chances of rain are 0.
+            }
+        }
         $clouds = $location->__get("clouds");
         if($clouds > 2 && $clouds <= 100)
         {
@@ -485,7 +494,7 @@ class WeatherMachine
             return 6;
         }
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     private function CheckForBlowingWind(Location $location)
