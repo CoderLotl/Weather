@@ -16,7 +16,7 @@ class WeatherMachine
     private const highDewTypes = [4, 7]; // The types of locations which have cloud dew.
     
     // Rain and Wind Control
-    private const windAndRainCloudReduction = false; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
+    private const windAndRainCloudReduction = true; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
     private const firstOrder = 1; // 1 = wind. 2 = rain.
     private const placesWithNoRain = [4, 7]; // The location types id of those places where you don't want it to rain.
     private const placesWithNoWind = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // The location types id of those places where you don't want it to be any wind.
@@ -435,7 +435,7 @@ class WeatherMachine
     {
         foreach($this::placesWithNoRain as $placeType)
         {
-            if($location->__get('type') == $placeType)
+            if($location->__get('type') === $placeType)
             {
                 return 0; // If the place's type is on the list of places with no rain, the chances of rain are 0.
             }
@@ -499,6 +499,13 @@ class WeatherMachine
 
     private function CheckForBlowingWind(Location $location)
     {
+        foreach($this::placesWithNoWind as $placeType)
+        {
+            if($location->__get('type') === $placeType)
+            {
+                return false; // If the place's type is on the list of places with no wind, there will be no wind.
+            }
+        }
         if(random_int(0,100) <= $this::blowingWindChances)
         {
             return true;
