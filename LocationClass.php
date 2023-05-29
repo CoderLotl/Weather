@@ -26,6 +26,12 @@ class Location
     }
     #endregion
     #region PROPERTIES
+    /**
+     * @param mixed $name id, name, type, weather, clouds, waterVapor, temperature, localWater.
+     * @param mixed $value int, string, int, int, float, float, float, float.
+     * 
+     * @return [type]
+     */
     public function __set($name, $value)
     {
         switch($name)

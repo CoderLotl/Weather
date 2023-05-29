@@ -398,6 +398,10 @@ class WeatherMachine
             {
                 $this->CastSomeRain($location);
             }
+            else
+            {
+                $location->__set('weather', 0);
+            }
         }
         else
         {
@@ -410,6 +414,7 @@ class WeatherMachine
             else
             {
                 $rainCloudReduction = false;
+                $location->__set('weather', 0);
             }
             if($this::windAndRainCloudReduction === true && $rainCloudReduction === false) // If the winds are to reduce the clouds and it hasn't rain at this tick...
             {
