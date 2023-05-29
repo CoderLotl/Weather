@@ -57,21 +57,24 @@ switch($option)
 $day = ['midday'];
 
 
+switch($option)
+{
+    case 1: // SQLITE
+        $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+        break;
+    case 2: // MYSQL
+        $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
+        break;
+}   
+
+
 for($i = 0; $i < 1000; $i ++)
 {
     foreach($day as $dayStage)
     {
         echo "\n*** LOCATION BLOCK ***";
         echo "\nDay Stage: {$dayStage}";
-        switch($option)
-        {
-            case 1: // SQLITE
-                $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
-                break;
-            case 2: // MYSQL
-                $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
-                break;
-        }        
+     
         echo "\nLocations:\n\n";
         //var_dump($locationArray);
         
@@ -113,7 +116,6 @@ for($i = 0; $i < 1000; $i ++)
                     }
                 }       
             }            
-        }
-        
+        }          
     }
 }
