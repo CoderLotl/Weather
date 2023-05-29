@@ -446,6 +446,9 @@ class WeatherMachine
     private function CastSomeRain(Location $location)
     {
         $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::precipitationFactor / 100);
+
+        // HERE I HAVE TO SET THE NEW WEATHER. PROBABLY BASED ON THE AMOUNT OF WATER MOVED.
+
         echo "\nWater moved by the rain: " . $returningWater;
         echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
         $location->__set("localWater", $location->__get("localWater") + $returningWater);
