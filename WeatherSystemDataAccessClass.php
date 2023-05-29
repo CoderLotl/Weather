@@ -6,7 +6,7 @@ class WeatherSystemDataAccess
     private static $password;
     private static $database;
 
-    public static function SetParams(string $hostname, string $username, string $password, string $database)
+    public static function SetDBParams(string $hostname, string $username, string $password, string $database)
     {
         WeatherSystemDataAccess::$hostname = $hostname;
         WeatherSystemDataAccess::$username = $username;
@@ -14,7 +14,7 @@ class WeatherSystemDataAccess
         WeatherSystemDataAccess::$database = $database;
     }
 
-    public static function GetParams($name)
+    public static function GetDBParams($name)
     {
         switch($name)
         {
@@ -64,7 +64,7 @@ class WeatherSystemDataAccess
             }
             else
             {
-                die( "The table is empty" );
+                die( "The table is empty." );
             }
             
         }

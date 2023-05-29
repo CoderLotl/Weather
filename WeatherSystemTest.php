@@ -51,8 +51,9 @@ for($i = 0; $i < 1; $i ++)
         foreach($locationArray as $newLocation)
         {
             //if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemdataAccess, "locs") == true)
-            if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage, $weatherSystemDataAccessSQLite, "locs") == true)
+            if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage) == true)
             {
+                $weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
                 echo $newLocation . "\n-------\n";
             }        
         }

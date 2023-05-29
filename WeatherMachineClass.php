@@ -29,12 +29,10 @@ class WeatherMachine
      * @param mixed $season This is a numeric indicator of the season. The system uses from -42 to 42.
      * @param Location $location The current location-object.
      * @param mixed $dayStage A string indicating the day stage.
-     * @param WeatherSystemDataAccess $WeatherSystemdataAccess The control which communicates with the data base. This one uses MySQL.
-     * @param string $table The table's name it has to work with. This is where the locations are stored.
      * 
      * @return bool If the tick has been executed successfully, it will return true. Otherwise it will return false.
      */
-    public function ExecuteWeatherTick($season, Location $location, $dayStage, WeatherSystemDataAccess $WeatherSystemdataAccess, string $table)
+    public function ExecuteWeatherTick($season, Location $location, $dayStage)
     {
         if($location->__get("type") !== -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
         {
@@ -42,10 +40,17 @@ class WeatherMachine
             $temperature = $this->CalcNewTemperature($season, $location->__get("type"), $dayStage, $location->__get("weather"));
             $location->__set("temperature", $temperature);
         
-            // CALCULATING AND SETTING THE NEW WEATHER
-            $weather = $this->CalcNewWeather($location);
+            // CALCULATING AND APPLYING EVAPORATION
+            $this->ApplyWaterEvaporation($location);
 
-            $WeatherSystemdataAccess->WriteLocationDataToDB($location, $table);
+            // CALCULATING AND APPLYING CLOUDIFICATION
+            $this->ApplyCloudification($location);
+
+            // CALCULATING AND SETTING THE NEW WEATHER
+            $this->CalcNewWeather($location);
+
+            // CALCULATING AND SETTING THE DEW
+            $this->ApplyDewCalculations($location);
 
             return true; // Returns the previous instance if the calculation was successful or not.
         }
@@ -62,12 +67,10 @@ class WeatherMachine
      * @param mixed $season - This is a numeric indicator of the season. The system uses from -42 to 42.
      * @param Location $location - The current location-object.
      * @param mixed $dayStage - A string indicating the day stage.
-     * @param WeatherSystemDataAccess $WeatherSystemdataAccess - The control which communicates with the data base. This one use SQLite.
-     * @param string $table - The table's name it has to work with. This is where the locations are stored.
      * 
-     * @return [type] If the tick has been executed successfully, it will return true. Otherwise it will return false.
+     * @return bool If the tick has been executed successfully, it will return true. Otherwise it will return false.
      */
-    public function ExecuteWeatherTickSQLite($season, Location $location, $dayStage, WeatherSystemSQLiteDataAccess $weatherSystemdataAccess, string $table)
+    public function ExecuteWeatherTickSQLite($season, Location $location, $dayStage)
     {
          // Locations of type 0 or below will be ignored completely. This is useful for places where you don't want the calc to happen.         
         if($location->__get("type") >= 1)
@@ -85,9 +88,10 @@ class WeatherMachine
             // CALCULATING AND SETTING THE NEW WEATHER
             $this->CalcNewWeather($location);
 
+            // CALCULATING AND SETTING THE DEW
             $this->ApplyDewCalculations($location);
 
-            $weatherSystemdataAccess->WriteLocationDataToDB($location, $table);
+            //$weatherSystemdataAccess->WriteLocationDataToDB($location, $table); <--- REMOVED FROM HERE. This step should be optional.
 
             return true; // Returns the previous instance if the calculation was successful or not.
         }
