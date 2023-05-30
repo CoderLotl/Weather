@@ -4,8 +4,7 @@ class WeatherSystemDataAccess
     private static $hostname;
     private static $username;
     private static $password;
-    private static $database;
-    private static $dbConnection;
+    private static $database;    
 
     public static function SetDBParams(string $hostname, string $username = null, string $password = null, string $database)
     {
