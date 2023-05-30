@@ -79,36 +79,35 @@ class WeatherSystemSQLiteDataAccess
     {
         $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
 
-        $locationID = $location->__get("id");
-        $locationType = $location->__get("type");
+        $locationID = $location->__get("id");        
         $weather = $location->__get("weather");
         $clouds = $location->__get("clouds");
         $waterVapor = $location->__get("waterVapor");
         $temperature = $location->__get("temperature");
         $localWater = $location->__get("localWater");        
 
-        $command = "UPDATE {$table} SET location_id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID}";
+        $command = "UPDATE {$table} SET weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID};";
         $db->query($command);
         $db->close();
     }
 
-    public function WriteAllLocationsDataToDB($locations, string $table)
+    public function UpdateAllLocationsDataToDB($locations, string $table)
     {
         $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
+        $command = '';
 
         foreach($locations as $location)
         {
-            $locationID = $location->__get('id');
-            $locationType = $location->__get('type');
+            $locationID = $location->__get('id');            
             $weather = $location->__get('weather');
             $clouds = $location->__get('clouds');
             $waterVapor = $location->__get('waterVapor');
             $temperature = $location->__get('temperature');
             $localWater = $location->__get('localWater');
 
-            $command = "UPDATE {$table} SET location_id = {$locationID}, location_type = {$locationType}, weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID}";
-            $db->query($command);
+            $command .= "UPDATE {$table} SET weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID};";
         }
+        $db->query($command);
         $db->close();
     }
 }

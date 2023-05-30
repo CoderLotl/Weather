@@ -31,7 +31,7 @@ require('LocationClass.php');
 //$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
 //$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
 
-$option = 1; // 1 = SQLITE - - - 2 = MYSQL
+$option = 2; // 1 = SQLITE - - - 2 = MYSQL
 
 $weatherMachine = new WeatherMachine();
 $locationArray = '';
@@ -47,7 +47,7 @@ switch($option)
         $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
         break;
     case 2: // MYSQL
-        WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test');
+        WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test', false);
         $weatherSystemdataAccess = new WeatherSystemDataAccess();
         $seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
         break;
@@ -84,7 +84,7 @@ for($i = 0; $i < 10; $i ++)
             {
                 if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage) == true)
                 {
-                    $weatherSystemdataAccess->WriteLocationDataToDB($newLocation, 'locs');
+                    //$weatherSystemdataAccess->UpdateLocationAtDB($newLocation, 'locs');
                     echo $newLocation . "\n-------\n";
 
                     $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
@@ -95,7 +95,7 @@ for($i = 0; $i < 10; $i ++)
             {
                 if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage) == true)
                 {
-                    $weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
+                    //$weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
                     echo $newLocation . "\n-------\n";
     
                     $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
@@ -104,4 +104,13 @@ for($i = 0; $i < 10; $i ++)
             }            
         }          
     }
+}
+
+if($option === 2)
+{
+    $weatherSystemdataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
+}
+else
+{
+    $weatherSystemDataAccessSQLite->UpdateAllLocationsDataToDB($locationArray, 'locs');
 }
