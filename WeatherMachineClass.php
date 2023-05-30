@@ -4,6 +4,9 @@ class WeatherMachine
 {
     /////////////////////////////////////////////////////////////
     #region - - - CONTROL OF CONSTANT VARIABLES - - -
+
+    // IDS: 1 [plains, meadows], 2 [jungles], 3 [woods, forests], 4 [deserts], 5 [mountains], 6 [swamps], 7 [canyons], 8 [lake], 9 [taiga], 10 [tundra], 11 [tundra deep]
+
     // Chances Control
     private const blowingWindChances = 35; // The chances of some 'wind' actually returning some water to the ground without actual rain.
     private const blowingWindReturn = 35; // The amount of water returned to the ground by 'some means'. The system doesn't contemplate the exitence of wind, but water has to return somehow and clouds have to go sometimes.
@@ -20,6 +23,19 @@ class WeatherMachine
     private const firstOrder = 1; // 1 = wind. 2 = rain.
     private const placesWithNoRain = [4, 7]; // The location types id of those places where you don't want it to rain.
     private const placesWithNoWind = [1, 2, 3, 5, 6, 8, 9, 10, 11]; // The location types id of those places where you don't want it to be any wind.
+
+    // Water Checking
+    private const waterLimits = ['1'=>100, '2'=>250, '3'=>200, '4'=>15, '5'=>50, '6'=>1000, '7'=>15, '8'=>1000, '9'=>100, '10'=>30, '11'=>30];
+    /*15 -> DESERT
+    15 -> CANYON
+    50 -> MOUNTAINS
+    30 -> TUNDRA
+    100 -> PLAINS / MEADOWS / TAIGA
+    200 -> WOODS / FOREST
+    1000 -> SWAMPS / LAKE
+    250 -> JUNGLES*/
+
+
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -53,6 +69,8 @@ class WeatherMachine
 
             // CALCULATING AND SETTING THE DEW
             $this->ApplyDewCalculations($location);
+
+            $this->CheckWaterLimits($location);
 
             return true; // Returns the previous instance if the calculation was successful or not.
         }
@@ -93,7 +111,7 @@ class WeatherMachine
             // CALCULATING AND SETTING THE DEW
             $this->ApplyDewCalculations($location);
 
-            //$weatherSystemdataAccess->WriteLocationDataToDB($location, $table); <--- REMOVED FROM HERE. This step should be optional.
+            $this->CheckWaterLimits($location);
 
             return true; // Returns the previous instance if the calculation was successful or not.
         }
@@ -324,6 +342,56 @@ class WeatherMachine
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     #region UTILITIES
+    private function CheckWaterLimits(Location $location)
+    {
+        $totalLiquids = ($location->__get('clouds') + $location->__get('localWater') + $location->__get('waterVapor'));
+        $clouds = $location->__get('clouds');
+        $localWater = $location->__get('localWater');
+        $waterVapor = $location->__get('waterVapor');
+
+        foreach(self::waterLimits as $limit => $value)
+        {
+            if($location->__get('type') === $limit)
+            {                
+                if($totalLiquids > ($value + 0.05) )
+                {
+                    if($clouds > $localWater && $clouds > $waterVapor)
+                    {
+                        $location->__set('clouds', ($clouds - 0.5));
+                    }
+                    elseif($localWater > $clouds && $localWater > $waterVapor)
+                    {
+                        $location->__set('localWater', ($localWater - 0.5));
+                    }
+                    else
+                    {
+                        $location->__set('waterVapor', ($waterVapor - 0.5));
+                    }
+                    echo "\nLocation's liquids have been corrected.\n";
+                }
+                elseif($totalLiquids < ($value - 0.05))
+                {
+                    if($clouds > $localWater && $clouds > $waterVapor)
+                    {
+                        $location->__set('clouds', ($clouds + 0.5));
+                    }
+                    elseif($localWater > $clouds && $localWater > $waterVapor)
+                    {
+                        $location->__set('localWater', ($localWater + 0.5));
+                    }
+                    else
+                    {
+                        $location->__set('waterVapor', ($waterVapor + 0.5));
+                    }
+                    echo "\nLocation's liquids have been corrected.\n";
+                }
+                
+                break;
+            }
+        }
+        
+    }
+
     /**
      * Calculates the saturation point temperature for a given humidity.
      * @param Location $location
@@ -580,7 +648,7 @@ class WeatherMachine
         $plus = 0;          // This factor adds a plus.
         
         switch($locationType)
-        {
+        {            
             case 1: // Plains / meadows
                 $tuning = 12; $amplitude = 2.6; $plus = 0; // -6 to 29 C, 21 to 85 F. - Deviation should go a lil bit up and down. - Night and day changes are small.
                 $topLimits =    [-3, -2, -1, 0, 1, 2, 1, 1]; // ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk']

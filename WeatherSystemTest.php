@@ -31,7 +31,7 @@ require('LocationClass.php');
 //$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
 //$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
 
-$option = 2; // 1 = SQLITE - - - 2 = MYSQL
+$option = 1; // 1 = SQLITE - - - 2 = MYSQL
 
 $weatherMachine = new WeatherMachine();
 $locationArray = '';
@@ -53,8 +53,8 @@ switch($option)
         break;
 }
 
-//$day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
-$day = ['midday'];
+$day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
+//$day = ['midday'];
 
 
 switch($option)
@@ -68,7 +68,7 @@ switch($option)
 }   
 
 
-for($i = 0; $i < 1000; $i ++)
+for($i = 0; $i < 10; $i ++)
 {
     foreach($day as $dayStage)
     {
@@ -87,15 +87,8 @@ for($i = 0; $i < 1000; $i ++)
                     $weatherSystemdataAccess->WriteLocationDataToDB($newLocation, 'locs');
                     echo $newLocation . "\n-------\n";
 
-                    if( ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor')) > 17)
-                    {
-                        die('ERROR HERE!!');
-                    }
-                    else
-                    {
-                        $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
-                        echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
-                    }
+                    $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                    echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
                 }
             }
             else
@@ -105,15 +98,8 @@ for($i = 0; $i < 1000; $i ++)
                     $weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
                     echo $newLocation . "\n-------\n";
     
-                    if( ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor')) > 17)
-                    {
-                        die('ERROR HERE!!');
-                    }
-                    else
-                    {
-                        $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
-                        echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
-                    }
+                    $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                    echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
                 }       
             }            
         }          
