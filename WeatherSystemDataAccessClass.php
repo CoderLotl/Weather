@@ -33,6 +33,17 @@ class WeatherSystemDataAccess
         }
     }
 
+    public function CreateTables()
+    {
+        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
+        $worldsTable = "CREATE TABLE IF NOT EXISTS `worlds` (`season_day` int(11) NOT NULL,`season_direction` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+        $locsTable = "CREATE TABLE IF NOT EXISTS `weather_test`.`locs` (`location_id` INT NOT NULL , `location_name` TEXT NOT NULL , `location_type` INT NOT NULL , `weather` INT NOT NULL , `clouds` FLOAT NOT NULL , `water_vapor` FLOAT NOT NULL , `temperature` INT NOT NULL , `local_water` FLOAT NOT NULL ) ENGINE = InnoDB;";
+
+        $mysqli->query($worldsTable);
+        $mysqli->query($locsTable);
+        $mysqli->close();
+    }
+
     public function ReadSeasonDataFromDB(string $table)
     {
         $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
