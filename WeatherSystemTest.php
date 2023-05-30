@@ -47,28 +47,43 @@ switch($option)
         $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
         break;
     case 2: // MYSQL
-        WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test', false);
+        WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test', true);
         $weatherSystemdataAccess = new WeatherSystemDataAccess();
         $seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
         break;
 }
 
+
 $day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
 //$day = ['midday'];
-
 
 switch($option)
 {
     case 1: // SQLITE
-        $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+        if(WeatherSystemSQLiteDataAccess::GetDBParams('historical') == true)
+        {            
+            $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB('locs', 2);
+        }
+        else
+        {
+            $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+        }
         break;
     case 2: // MYSQL
-        $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB("locs");
+        if(WeatherSystemDataAccess::GetDBParams('historical') == true)
+        {            
+            $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB('locs', 2);
+        }
+        else
+        {
+            $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+        }
         break;
 }   
 
+var_dump($locationArray);
 
-for($i = 0; $i < 10; $i ++)
+for($i = 0; $i < 1; $i ++)
 {
     foreach($day as $dayStage)
     {
@@ -109,6 +124,7 @@ for($i = 0; $i < 10; $i ++)
 if($option === 2)
 {
     $weatherSystemdataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
+    $weatherSystemdataAccess->WriteLocationsToDB($locationArray, 'test');
 }
 else
 {

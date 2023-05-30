@@ -7,7 +7,7 @@ class WeatherSystemDataAccess
     private static $database;
     private static $historical;    
 
-    public static function SetDBParams(string $hostname, string $username = null, string $password = null, string $database, $historical)
+    public static function SetDBParams(string $hostname, string $username = null, string $password = null, string $database, bool $historical = false)
     {
         self::$hostname = $hostname;
         self::$username = $username;
@@ -21,13 +21,15 @@ class WeatherSystemDataAccess
         switch($name)
         {
             case 'hostname':
-                return WeatherSystemDataAccess::$hostname;
+                return self::$hostname;
             case 'username':
-                return WeatherSystemDataAccess::$username;
+                return self::$username;
             case 'password':
-                return WeatherSystemDataAccess::$password;
+                return self::$password;
             case 'database':
-                return WeatherSystemDataAccess::$database;
+                return self::$database;
+            case 'historical':
+                return self::$historical;
             default:
                 echo "The attribute doesn't exist.";
                 return false;
@@ -116,8 +118,11 @@ class WeatherSystemDataAccess
         {
             $mysqli->select_db(self::$database) or die( "Unable to select database.");
             $query = '';
-
-            if(self::$historical === true)
+            if(self::$historical === true && $limit === null)
+            {
+                die("ERROR. The retrieve is historical but the LIMIT param is null.");
+            }
+            elseif(self::$historical === true && $limit !== null)
             {
                 $query = "SELECT location_id, location_name, location_type, weather, clouds, water_vapor, temperature, local_water FROM {$table} ORDER BY timestamp_id DESC LIMIT {$limit}";
             }
@@ -153,9 +158,35 @@ class WeatherSystemDataAccess
 
     public function WriteLocationsToDB($locations, string $table)
     {
-        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
-
-
+        //$test = true;
+        if(self::$historical /*$test*/ === true)
+        {
+            $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
+            $command = '';
+            $timestamp = time();
+    
+            foreach($locations as $location)
+            {
+                $locationID = $mysqli->real_escape_string($location->__get('id'));
+                $locationType = $mysqli->real_escape_string($location->__get('type'));
+                $locationName = $mysqli->real_escape_string($location->__get('name'));
+                $weather = $mysqli->real_escape_string($location->__get('weather'));
+                $clouds = $mysqli->real_escape_string($location->__get('clouds'));
+                $waterVapor = $mysqli->real_escape_string($location->__get('waterVapor'));
+                $temperature = $mysqli->real_escape_string($location->__get('temperature'));
+                $localWater = $mysqli->real_escape_string($location->__get('localWater'));
+    
+                $command .= "INSERT INTO {$table} (location_id, location_type, location_name, weather, clouds, water_vapor, temperature, local_water, timestamp_id) VALUES ('$locationID', '$locationType', '$locationName', '$weather', '$clouds', '$waterVapor', '$temperature', '$localWater', '$timestamp');";
+            }      
+            $mysqli->multi_query($command);
+            $mysqli->close();
+            return true;
+        }
+        else
+        {
+            echo "\nERROR. The current instance isn't set as Historical.\n";
+            return false;
+        }
     }
 
     public function UpdateLocationAtDB(Location $location, string $table)

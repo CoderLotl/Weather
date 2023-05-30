@@ -7,15 +7,22 @@
 class WeatherSystemSQLiteDataAccess
 {
     private static $DBPath;
+    private static $historical;    
 
-    public static function SetDBPath(string $dbPath)
+    public static function SetDBPath(string $dbPath, bool $historical = false)
     {
         WeatherSystemSQLiteDataAccess::$DBPath = $dbPath;
     }
 
-    public static function GetDBPath()
+    public static function GetDBParams($name)
     {
-        return WeatherSystemSQLiteDataAccess::$DBPath;
+        switch($name)
+        {
+            case 'path':
+                return self::$DBPath;
+            case 'historical':
+                return self::$historical;
+        }
     }
 
     public function ReadSeasonDataFromDB(string $table)
@@ -40,7 +47,7 @@ class WeatherSystemSQLiteDataAccess
         return $seasonControl;
     }
 
-    public function WriteSeasonDataToDB(SeasonControl $seasonControl, string $table)
+    public function UpdateSeasonDataToDB(SeasonControl $seasonControl, string $table)
     {
         $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
 
@@ -75,7 +82,7 @@ class WeatherSystemSQLiteDataAccess
         return $locationArray;        
     }
 
-    public function WriteLocationDataToDB(Location $location, string $table)
+    public function UpdateLocationDataToDB(Location $location, string $table)
     {
         $db = new SQLite3(WeatherSystemSQLiteDataAccess::$DBPath);
 
