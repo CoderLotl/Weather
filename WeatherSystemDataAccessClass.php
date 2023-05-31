@@ -157,9 +157,8 @@ class WeatherSystemDataAccess
     }
 
     public function WriteLocationsToDB($locations, string $table)
-    {
-        //$test = true;
-        if(self::$historical /*$test*/ === true)
+    {        
+        if(self::$historical === true)
         {
             $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
             $command = '';
