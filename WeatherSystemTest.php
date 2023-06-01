@@ -90,32 +90,16 @@ for($i = 0; $i < 1; $i ++)
         echo "\n*** LOCATION BLOCK ***";
         echo "\nDay Stage: {$dayStage}";
      
-        echo "\nLocations:\n\n";
-        //var_dump($locationArray);
+        echo "\nLocations:\n\n";        
         
         foreach($locationArray as $newLocation)
         {
-            if($option === 2)
-            {
-                if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage) == true)
-                {
-                    //$weatherSystemdataAccess->UpdateLocationAtDB($newLocation, 'locs');
-                    echo $newLocation . "\n-------\n";
+            if($weatherMachine->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage) == true)
+            {                
+                echo $newLocation . "\n-------\n";
 
-                    $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
-                    echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
-                }
-            }
-            else
-            {
-                if($weatherMachine->ExecuteWeatherTickSQLite($seasonControl->GetDay(), $newLocation, $dayStage) == true)
-                {
-                    //$weatherSystemDataAccessSQLite->WriteLocationDataToDB($newLocation, 'locs');
-                    echo $newLocation . "\n-------\n";
-    
-                    $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
-                    echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
-                }       
+                $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
             }            
         }          
     }

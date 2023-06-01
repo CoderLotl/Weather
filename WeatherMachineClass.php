@@ -7,6 +7,10 @@ class WeatherMachine
 
     // IDS: 1 [plains, meadows], 2 [jungles], 3 [woods, forests], 4 [deserts], 5 [mountains], 6 [swamps], 7 [canyons], 8 [lake], 9 [taiga], 10 [tundra], 11 [tundra deep]
 
+    // Machine MAIN Control
+    private const applyTemperature = true;
+    private const applyWeather = true;
+
     // Chances Control
     private const blowingWindChances = 35; // The chances of some 'wind' actually returning some water to the ground without actual rain.
     private const blowingWindReturn = 35; // The amount of water returned to the ground by 'some means'. The system doesn't contemplate the exitence of wind, but water has to return somehow and clouds have to go sometimes.
@@ -55,22 +59,28 @@ class WeatherMachine
         if($location->__get("type") !== -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
         {
             // CALCULATING AND SETTING THE NEW TEMPERATURE
-            $temperature = $this->CalcNewTemperature($season, $location->__get("type"), $dayStage, $location->__get("weather"));
-            $location->__set("temperature", $temperature);
+            if(self::applyTemperature === true)
+            {
+                $temperature = $this->CalcNewTemperature($season, $location->__get("type"), $dayStage, $location->__get("weather"));
+                $location->__set("temperature", $temperature);
+
+                if(self::applyWeather === true)
+                {
+                    // CALCULATING AND APPLYING EVAPORATION
+                    $this->ApplyWaterEvaporation($location);
         
-            // CALCULATING AND APPLYING EVAPORATION
-            $this->ApplyWaterEvaporation($location);
-
-            // CALCULATING AND APPLYING CLOUDIFICATION
-            $this->ApplyCloudification($location);
-
-            // CALCULATING AND SETTING THE NEW WEATHER
-            $this->CalcNewWeather($location);
-
-            // CALCULATING AND SETTING THE DEW
-            $this->ApplyDewCalculations($location);
-
-            $this->CheckWaterLimits($location);
+                    // CALCULATING AND APPLYING CLOUDIFICATION
+                    $this->ApplyCloudification($location);
+        
+                    // CALCULATING AND SETTING THE NEW WEATHER
+                    $this->CalcNewWeather($location);
+        
+                    // CALCULATING AND SETTING THE DEW
+                    $this->ApplyDewCalculations($location);
+        
+                    $this->CheckWaterLimits($location);
+                }
+            }        
 
             return true; // Returns the previous instance if the calculation was successful or not.
         }
@@ -82,44 +92,7 @@ class WeatherMachine
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-    /**
-     * Executes a weather tick on a given location passed by param. This function targets a SQLite database.
-     * @param mixed $season - This is a numeric indicator of the season. The system uses from -42 to 42.
-     * @param Location $location - The current location-object.
-     * @param mixed $dayStage - A string indicating the day stage.
-     * 
-     * @return bool If the tick has been executed successfully, it will return true. Otherwise it will return false.
-     */
-    public function ExecuteWeatherTickSQLite($season, Location $location, $dayStage)
-    {
-         // Locations of type 0 or below will be ignored completely. This is useful for places where you don't want the calc to happen.         
-        if($location->__get("type") >= 1)
-        {            
-            // CALCULATING AND SETTING THE NEW TEMPERATURE
-            $temperature = $this->CalcNewTemperature($season, $location->__get("type"), $dayStage, $location->__get("weather"));
-            $location->__set("temperature", $temperature);
-        
-            // CALCULATING AND APPLYING EVAPORATION
-            $this->ApplyWaterEvaporation($location);
 
-            // CALCULATING AND APPLYING CLOUDIFICATION
-            $this->ApplyCloudification($location);
-
-            // CALCULATING AND SETTING THE NEW WEATHER
-            $this->CalcNewWeather($location);
-
-            // CALCULATING AND SETTING THE DEW
-            $this->ApplyDewCalculations($location);
-
-            $this->CheckWaterLimits($location);
-
-            return true; // Returns the previous instance if the calculation was successful or not.
-        }
-        else
-        {
-            return false;
-        }
-    }    
     #endregion
     
     #region DEW METHODS
