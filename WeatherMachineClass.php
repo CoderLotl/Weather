@@ -8,8 +8,8 @@ class WeatherMachine
     // IDS: 1 [plains, meadows], 2 [jungles], 3 [woods, forests], 4 [deserts], 5 [mountains], 6 [swamps], 7 [canyons], 8 [lake], 9 [taiga], 10 [tundra], 11 [tundra deep]
 
     // Machine MAIN Control
-    private const applyTemperature = true;
-    private const applyWeather = true;
+    private const applyTemperature = true; // If set to false, no temperature calculation will be executed (and therefore no weather too).
+    private const applyWeather = true; // If set to false, no weather calculations will be executed.
 
     // Chances Control
     private const blowingWindChances = 35; // The chances of some 'wind' actually returning some water to the ground without actual rain.
@@ -30,6 +30,9 @@ class WeatherMachine
 
     // Water Checking
     private const waterLimits = ['1'=>100, '2'=>250, '3'=>200, '4'=>15, '5'=>50, '6'=>1000, '7'=>15, '8'=>1000, '9'=>100, '10'=>30, '11'=>30];
+    // These are the water limits for each region, ideally measured as grams of water per cubic meter.
+
+    // WATER LIMITS REFERENCE
     /*15 -> DESERT
     15 -> CANYON
     50 -> MOUNTAINS
@@ -39,6 +42,7 @@ class WeatherMachine
     1000 -> SWAMPS / LAKE
     250 -> JUNGLES*/
 
+    /////////////////////////////////////////////////////////////
 
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -47,7 +51,7 @@ class WeatherMachine
 
     #region TICK EXECUTION
     /**
-     * Executes a weather tick on a given location passed by param. This function targets a MySQL database.
+     * Executes a weather tick on a given location passed by param.
      * @param mixed $season This is a numeric indicator of the season. The system uses from -42 to 42.
      * @param Location $location The current location-object.
      * @param mixed $dayStage A string indicating the day stage.
@@ -89,10 +93,6 @@ class WeatherMachine
             return false;
         }
     }
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-
     #endregion
     
     #region DEW METHODS
@@ -328,33 +328,39 @@ class WeatherMachine
             {                
                 if($totalLiquids > ($value + 0.05) )
                 {
-                    if($clouds > $localWater && $clouds > $waterVapor)
+                    while ($totalLiquids > ($value + 0.05) )
                     {
-                        $location->__set('clouds', ($clouds - 0.5));
-                    }
-                    elseif($localWater > $clouds && $localWater > $waterVapor)
-                    {
-                        $location->__set('localWater', ($localWater - 0.5));
-                    }
-                    else
-                    {
-                        $location->__set('waterVapor', ($waterVapor - 0.5));
+                        if($clouds > $localWater && $clouds > $waterVapor)
+                        {
+                            $location->__set('clouds', ($clouds - 0.5));
+                        }
+                        elseif($localWater > $clouds && $localWater > $waterVapor)
+                        {
+                            $location->__set('localWater', ($localWater - 0.5));
+                        }
+                        else
+                        {
+                            $location->__set('waterVapor', ($waterVapor - 0.5));
+                        }
                     }
                     echo "\nLocation's liquids have been corrected.\n";
                 }
-                elseif($totalLiquids < ($value - 0.05))
+                elseif($totalLiquids < ($value - 0.05) )
                 {
-                    if($clouds > $localWater && $clouds > $waterVapor)
+                    while($totalLiquids < ($value - 0.05) )
                     {
-                        $location->__set('clouds', ($clouds + 0.5));
-                    }
-                    elseif($localWater > $clouds && $localWater > $waterVapor)
-                    {
-                        $location->__set('localWater', ($localWater + 0.5));
-                    }
-                    else
-                    {
-                        $location->__set('waterVapor', ($waterVapor + 0.5));
+                        if($clouds > $localWater && $clouds > $waterVapor)
+                        {
+                            $location->__set('clouds', ($clouds + 0.5));
+                        }
+                        elseif($localWater > $clouds && $localWater > $waterVapor)
+                        {
+                            $location->__set('localWater', ($localWater + 0.5));
+                        }
+                        else
+                        {
+                            $location->__set('waterVapor', ($waterVapor + 0.5));
+                        }
                     }
                     echo "\nLocation's liquids have been corrected.\n";
                 }

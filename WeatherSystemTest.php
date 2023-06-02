@@ -28,9 +28,6 @@ require('LocationClass.php');
 // - - - [ TEST ] - - - * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // - - - - - - - - - - -
 
-//$weatherSystemdataAccess = new WeatherSystemDataAccess("localhost:3306","weather_test","weather123","weathertest");
-//$seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
-
 $option = 2; // 1 = SQLITE - - - 2 = MYSQL
 
 $weatherMachine = new WeatherMachine();
@@ -80,8 +77,6 @@ switch($option)
         }
         break;
 }   
-
-var_dump($locationArray);
 
 for($i = 0; $i < 1; $i ++)
 {
