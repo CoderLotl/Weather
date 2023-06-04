@@ -315,6 +315,14 @@ class WeatherMachine
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     #region UTILITIES
+
+    /**
+     * Checks the total liquids present at the location and corrects any deviation based on the set values for the location type.
+     * The corrections are performed at whichever of the 3 areas of water at the location there's the most water.
+     * @param Location $location
+     * 
+     * @return [type]
+     */
     private function CheckWaterLimits(Location $location)
     {
         $totalLiquids = ($location->__get('clouds') + $location->__get('localWater') + $location->__get('waterVapor'));
@@ -547,7 +555,13 @@ class WeatherMachine
     }
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+    #region WIND
+    /**
+     * This function checks if the location has wind or not and, if possitive, calculates the chance of some gust of wind happening.
+     * @param Location $location The location we are working with.
+     * 
+     * @return [type] True if there's chance of wind, false if there's not or if the place has no wind.
+     */
     private function CheckForBlowingWind(Location $location)
     {
         foreach($this::placesWithNoWind as $placeType)
@@ -567,6 +581,12 @@ class WeatherMachine
         }
     }
 
+    /**
+     * Removes some water from the clouds and returns it to the ground without directly affecting the weather. Useful for those places that have no rain and no dew but you need to complete the water cycle anyway.
+     * @param Location $location The location we are working with.
+     * 
+     * @return [type] Void.
+     */
     private function BlowSomeWind(Location $location)
     {
         $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::blowingWindReturn / 100);
@@ -576,9 +596,9 @@ class WeatherMachine
         $location->__set("clouds", $location->__get("clouds") - $returningWater);
         echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+    #region TEMPERATURE
     /**
      * Returns an index to work at based on the name of the day stage. This is only used at the CalcNewTemperature function.
      * @param string $dayStage
@@ -612,11 +632,11 @@ class WeatherMachine
 
     /**
      * Returns a package of parameters based on the location type. Those parameters are meant to be consumed later by other formulas.
-     * @param mixed $locationType
+     * @param int $locationType The numeric value that represents the location type.
      * 
-     * @return TemperatureParameters
+     * @return TemperatureParameters A package class containing several numeric arguments to be consumed by CalcNewTemperature.
      */
-    private function SetParamsByLocation($locationType)
+    private function SetParamsByLocation(int $locationType)
     {
         // This part calculates the average temperatures by Location.
 
@@ -762,7 +782,7 @@ class WeatherMachine
 
         return $param;
     }
-
+    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 }
 

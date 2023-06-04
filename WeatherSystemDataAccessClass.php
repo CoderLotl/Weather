@@ -111,12 +111,13 @@ class WeatherSystemDataAccess
     #region LOCATIONS
     public function ReadLocationDataFromDB(string $table, $limit = null)
     {
-        $locationArray = array();
-        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
+        $locationArray = [];
+        $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
+        $pdo = new PDO($dsn, self::$username, self::$password);        
 
         try
         {
-            $mysqli->select_db(self::$database) or die( "Unable to select database.");
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);            
             $query = '';
             if(self::$historical === true && $limit === null)
             {
@@ -131,28 +132,28 @@ class WeatherSystemDataAccess
                 $query = "SELECT location_id, location_name, location_type, weather, clouds, water_vapor, temperature, local_water FROM {$table}";
             }
 
-            $data = $mysqli->query($query);
-
-            $mysqli->close();
-
-            if($data->num_rows > 0)
+            $statement = $pdo->prepare($query);            
+            $statement->execute();
+            $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+    
+            if (count($result) > 0)
             {
-                while($row = $data->fetch_array())
-                {            
-                    $location = new Location($row['location_id'], $row['location_name'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);            
+                foreach ($result as $row)
+                {
+                    $location = new Location($row['location_id'], $row['location_name'], $row['location_type'], $row['weather'], $row['clouds'], $row['water_vapor'], $row['temperature'], $row['local_water']);
                     array_push($locationArray, $location);
                 }
             }
             else
             {
-                die( "The table is empty." );
+                die("The table is empty.");
             }
 
             return $locationArray;
         }
-        catch(Exception $e)
+        catch (PDOException $e)
         {
-            die("Imposible to reach the database. Error: " . $e);
+            die("Impossible to reach the database. Error: " . $e->getMessage());
         }               
     }
 
