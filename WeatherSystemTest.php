@@ -103,7 +103,10 @@ for($i = 0; $i < 1; $i ++)
 if($option === 2)
 {
     $weatherSystemdataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
-    $weatherSystemdataAccess->WriteLocationsToDB($locationArray, 'test');
+    if(WeatherSystemDataAccess::GetDBParams('historical') === true)
+    {
+        $weatherSystemdataAccess->WriteLocationsToDB($locationArray, 'test');
+    }
 }
 else
 {
