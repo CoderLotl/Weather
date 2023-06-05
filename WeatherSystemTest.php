@@ -44,7 +44,7 @@ switch($option)
         $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
         break;
     case 2: // MYSQL
-        WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test', true);
+        WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test');
         $weatherSystemdataAccess = new WeatherSystemDataAccess();
         $seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
         break;
@@ -59,7 +59,7 @@ switch($option)
     case 1: // SQLITE
         if(WeatherSystemSQLiteDataAccess::GetDBParams('historical') == true)
         {            
-            $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB('locs', 2);
+            $locationArray = $weatherSystemdataAccessSQLite->ReadLocationDataFromDB('locs', 2);
         }
         else
         {
@@ -67,13 +67,13 @@ switch($option)
         }
         break;
     case 2: // MYSQL
-        if(WeatherSystemDataAccess::GetDBParams('historical') == true)
+        if(WeatherSystemDataAccess::GetDBParams('historical') === true)
         {            
             $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB('locs', 2);
         }
         else
-        {
-            $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
+        {            
+            $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB('locs');
         }
         break;
 }   

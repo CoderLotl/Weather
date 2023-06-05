@@ -38,32 +38,46 @@ class WeatherSystemDataAccess
 
     public function CreateTables()
     {
-        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
-        $worldsTable = "CREATE TABLE IF NOT EXISTS `worlds` (`season_day` int(11) NOT NULL,`season_direction` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
-        $locsTable = "CREATE TABLE IF NOT EXISTS `weather_test`.`locs` (`location_id` INT NOT NULL , `location_name` TEXT NOT NULL , `location_type` INT NOT NULL , `weather` INT NOT NULL , `clouds` FLOAT NOT NULL , `water_vapor` FLOAT NOT NULL , `temperature` INT NOT NULL , `local_water` FLOAT NOT NULL , `timestamp_id` INT NOT NULL) ENGINE = InnoDB;";
+        $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
+        $pdo = new PDO($dsn, self::$username, self::$password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $mysqli->query($worldsTable);
-        $mysqli->query($locsTable);
-        $mysqli->close();
+        try
+        {
+            $worldsTable = "CREATE TABLE IF NOT EXISTS `worlds` (`season_day` int(11) NOT NULL,`season_direction` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+            $locsTable = "CREATE TABLE IF NOT EXISTS `weather_test`.`locs` (`location_id` INT NOT NULL , `location_name` TEXT NOT NULL , `location_type` INT NOT NULL , `weather` INT NOT NULL , `clouds` FLOAT NOT NULL , `water_vapor` FLOAT NOT NULL , `temperature` INT NOT NULL , `local_water` FLOAT NOT NULL , `timestamp_id` INT NOT NULL) ENGINE = InnoDB;";
+    
+            $statement = $pdo->prepare($worldsTable);            
+            $statement->execute();
+            $statement = $pdo->prepare($locsTable);            
+            $statement->execute();                        
+            return true;
+        }
+        catch(PDOException $e)
+        {
+            echo $e;
+            return false;
+        }
     }
     #region SEASON
     public function ReadSeasonDataFromDB(string $table)
     {
-        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
+        $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
+        $pdo = new PDO($dsn, self::$username, self::$password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
         try
-        {
-            $mysqli->select_db(self::$database) or die( "Unable to select database.");
-            $data = $mysqli->query("SELECT season_day, season_direction FROM {$table}");
+        {  
+            $statement = $pdo->prepare("SELECT season_day, season_direction FROM {$table}");
+            $statement->execute();
+            $data = $statement->fetch(PDO::FETCH_ASSOC);
 
-            $mysqli->close();
-
-            if($data->num_rows > 0)
-            {
-                $data = $data->fetch_array();
-
+            if(count($data) > 0)
+            {                
                 $seasonControl = new SeasonControl();
-                $seasonControl->SetDay($data[0]);
-                if($data[1] == 0)
+                $seasonControl->SetDay($data['season_day']);
+
+                if($data['season_direction'] == 0)
                 {
                     $seasonControl->SetGoingForward(false);            
                 }
@@ -72,7 +86,7 @@ class WeatherSystemDataAccess
                     $seasonControl->SetGoingForward(true);
                 }
 
-                echo "\nSeaconControl created successfully.";
+                echo "\nSeaconControl created successfully.\n";
                 
                 return $seasonControl;
             }
@@ -89,23 +103,35 @@ class WeatherSystemDataAccess
         
     }
 
-    public function WriteSeasonDataToDB(SeasonControl $seasonControl, string $table)
+    public function UpdateSeasonDataToDB(SeasonControl $seasonControl, string $table)
     {
-        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
+        $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
+        $pdo = new PDO($dsn, self::$username, self::$password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); 
 
-        $day = $seasonControl->GetDay();
-        if($seasonControl->GetGoingForward() == false)
+        try
         {
-            $goingForward = 0;
+            $day = $seasonControl->GetDay();
+            if($seasonControl->GetGoingForward() == false)
+            {
+                $goingForward = 0;
+            }
+            else
+            {
+                $goingForward = 1;
+            }        
+    
+            $query = "UPDATE {$table} SET season_day = {$day}, season_direction = {$goingForward}";
+    
+            $statement = $pdo->prepare($query);            
+            $statement->execute();
+            return true;
         }
-        else
+        catch(PDOException $e)
         {
-            $goingForward = 1;
-        }        
-
-        $command = "UPDATE {$table} SET season_day = {$day}, season_direction = {$goingForward}";
-
-        $mysqli->query($command);
+            echo $e;
+            return false;
+        }
     }
     #endregion
     #region LOCATIONS
@@ -146,83 +172,127 @@ class WeatherSystemDataAccess
             }
             else
             {
-                die("The table is empty.");
+                echo "The table is empty.";
+                return false;
             }
 
             return $locationArray;
         }
         catch (PDOException $e)
         {
-            die("Impossible to reach the database. Error: " . $e->getMessage());
+            echo "Impossible to reach the database. Error: " . $e->getMessage();
+            return false;
         }               
     }
 
-    public function WriteLocationsToDB($locations, string $table)
-    {        
-        if(self::$historical === true)
+    public function WriteLocationsToDB($locations, string $table, bool $historical = false)
+    {
+        $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
+        $pdo = new PDO($dsn, self::$username, self::$password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $timestamp = time();
+        $query = '';
+
+        if( ($historical === true && self::$historical === true ) || ($historical === false && self::$historical === false) )
         {
-            $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
-            $command = '';
-            $timestamp = time();
-    
-            foreach($locations as $location)
+            try
             {
-                $locationID = $mysqli->real_escape_string($location->__get('id'));
-                $locationType = $mysqli->real_escape_string($location->__get('type'));
-                $locationName = $mysqli->real_escape_string($location->__get('name'));
-                $weather = $mysqli->real_escape_string($location->__get('weather'));
-                $clouds = $mysqli->real_escape_string($location->__get('clouds'));
-                $waterVapor = $mysqli->real_escape_string($location->__get('waterVapor'));
-                $temperature = $mysqli->real_escape_string($location->__get('temperature'));
-                $localWater = $mysqli->real_escape_string($location->__get('localWater'));
-    
-                $command .= "INSERT INTO {$table} (location_id, location_type, location_name, weather, clouds, water_vapor, temperature, local_water, timestamp_id) VALUES ('$locationID', '$locationType', '$locationName', '$weather', '$clouds', '$waterVapor', '$temperature', '$localWater', '$timestamp');";
-            }      
-            $mysqli->multi_query($command);
-            $mysqli->close();
-            return true;
+                foreach($locations as $location)
+                {
+                    $locationID = $location->__get('id');
+                    $locationType = $location->__get('type');
+                    $locationName = $location->__get('name');
+                    $weather = $location->__get('weather');
+                    $clouds = $location->__get('clouds');
+                    $waterVapor = $location->__get('waterVapor');
+                    $temperature = $location->__get('temperature');
+                    $localWater = $location->__get('localWater');
+        
+                    if($historical === true)
+                    {
+                        $query .= "INSERT INTO {$table} (location_id, location_type, location_name, weather, clouds, water_vapor, temperature, local_water, timestamp_id) VALUES ('$locationID', '$locationType', '$locationName', '$weather', '$clouds', '$waterVapor', '$temperature', '$localWater', '$timestamp');";
+                    }
+                    else
+                    {
+                        $query .= "INSERT INTO {$table} (location_id, location_type, location_name, weather, clouds, water_vapor, temperature, local_water) VALUES ('$locationID', '$locationType', '$locationName', '$weather', '$clouds', '$waterVapor', '$temperature', '$localWater');";
+                    }
+                }      
+                $statement = $pdo->prepare($query);            
+                $statement->execute();
+                return true;
+            }
+            catch(PDOException $e)
+            {
+                echo $e;
+                return false;
+            }
+        }
+        else if($historical === true && self::$historical === false)
+        {
+            echo "\nERROR. The current instance isn't set as Historical.\n";
         }
         else
         {
-            echo "\nERROR. The current instance isn't set as Historical.\n";
-            return false;
+            echo "\nERROR. The current instance is set as Historical.\n";
         }
+        return false;                        
     }
 
     public function UpdateLocationAtDB(Location $location, string $table)
     {
-        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
+        $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
+        $pdo = new PDO($dsn, self::$username, self::$password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $locationID = $location->__get('id');        
-        $weather = $location->__get('weather');
-        $clouds = $location->__get('clouds');
-        $waterVapor = $location->__get('waterVapor');
-        $temperature = $location->__get('temperature');
-        $localWater = $location->__get('localWater');
-
-        $command = "UPDATE {$table} SET weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID};";
-        $mysqli->query($command);
-        $mysqli->close();
+        try
+        {
+            $locationID = $location->__get('id');        
+            $weather = $location->__get('weather');
+            $clouds = $location->__get('clouds');
+            $waterVapor = $location->__get('waterVapor');
+            $temperature = $location->__get('temperature');
+            $localWater = $location->__get('localWater');
+    
+            $query = "UPDATE {$table} SET weather = {$weather}, clouds = {$clouds}, water_vapor = {$waterVapor}, temperature = {$temperature}, local_water = {$localWater} WHERE location_id = {$locationID};";
+            $statement = $pdo->prepare($query);            
+            $statement->execute();
+            return true;
+        }
+        catch(PDOException $e)
+        {
+            echo $e;
+            return false;
+        }
     }
 
     public function UpdateAllLocationsAtDB($locations, string $table)
     {
-        $mysqli = new mysqli(self::$hostname, self::$username, self::$password, self::$database);
-        $command = null;
+        $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
+        $pdo = new PDO($dsn, self::$username, self::$password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $query = '';
     
-        foreach($locations as $location)
+        try
         {
-            $locationID = $mysqli->real_escape_string($location->__get('id'));
-            $weather = $mysqli->real_escape_string($location->__get('weather'));
-            $clouds = $mysqli->real_escape_string($location->__get('clouds'));
-            $waterVapor = $mysqli->real_escape_string($location->__get('waterVapor'));
-            $temperature = $mysqli->real_escape_string($location->__get('temperature'));
-            $localWater = $mysqli->real_escape_string($location->__get('localWater'));
-    
-            $command .= "UPDATE {$table} SET weather = '{$weather}', clouds = '{$clouds}', water_vapor = '{$waterVapor}', temperature = '{$temperature}', local_water = '{$localWater}' WHERE location_id = '{$locationID}';";
-        }      
-        $mysqli->multi_query($command);
-        $mysqli->close();
+            foreach($locations as $location)
+            {
+                $locationID = $location->__get('id');
+                $weather = $location->__get('weather');
+                $clouds = $location->__get('clouds');
+                $waterVapor = $location->__get('waterVapor');
+                $temperature = $location->__get('temperature');
+                $localWater = $location->__get('localWater');
+        
+                $query .= "UPDATE {$table} SET weather = '{$weather}', clouds = '{$clouds}', water_vapor = '{$waterVapor}', temperature = '{$temperature}', local_water = '{$localWater}' WHERE location_id = '{$locationID}';";
+            }      
+            $statement = $pdo->prepare($query);            
+            $statement->execute();
+        }
+        catch(PDOException $e)
+        {
+            echo $e;
+            return false;
+        }
     }
     #endregion
 }
