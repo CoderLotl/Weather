@@ -1,6 +1,6 @@
 <?php
 /**
-  * Provides connection with a given MySQL DB where the tables with the season and locations are stored.
+ * Provides connection with a given MySQL DB where the tables with the season and locations are stored.
  * Provides public functions to read, update and write both season's and location's data.
  */
 class WeatherSystemDataAccess
@@ -11,6 +11,16 @@ class WeatherSystemDataAccess
     private static $database;
     private static $historical;    
 
+    /**
+     * Sets the parameters the class is going to work with.
+     * @param string $hostname The name of the host the class is going to interact with.
+     * @param string|null $username The username to log with.
+     * @param string|null $password The password to log with. Can be left in blank.
+     * @param string $database The database the class is going to connect to.
+     * @param bool $historical If set to True, this class is going to add timestamps and work as if the locations table is an archive table.
+     * 
+     * @return Void.
+     */
     public static function SetDBParams(string $hostname, string $username = null, string $password = null, string $database, bool $historical = false)
     {
         self::$hostname = $hostname;
@@ -40,26 +50,38 @@ class WeatherSystemDataAccess
         }
     }
 
+    /**
+     * Creates the required tables at the previously specified database. This doesn't fill the tables with any data.
+     * @return bool True if success, False if fail.
+     */
     public function CreateTables()
     {
         $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
         $pdo = new PDO($dsn, self::$username, self::$password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        try
+        if(self::$database !== null)
         {
-            $worldsTable = "CREATE TABLE IF NOT EXISTS `worlds` (`season_day` int(11) NOT NULL,`season_direction` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
-            $locsTable = "CREATE TABLE IF NOT EXISTS `weather_test`.`locs` (`location_id` INT NOT NULL , `location_name` TEXT NOT NULL , `location_type` INT NOT NULL , `weather` INT NOT NULL , `clouds` FLOAT NOT NULL , `water_vapor` FLOAT NOT NULL , `temperature` INT NOT NULL , `local_water` FLOAT NOT NULL , `timestamp_id` INT NOT NULL) ENGINE = InnoDB;";
-    
-            $statement = $pdo->prepare($worldsTable);            
-            $statement->execute();
-            $statement = $pdo->prepare($locsTable);            
-            $statement->execute();                        
-            return true;
+            try
+            {
+                $worldsTable = "CREATE TABLE IF NOT EXISTS `worlds` (`season_day` int(11) NOT NULL,`season_direction` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+                $locsTable = "CREATE TABLE IF NOT EXISTS `weather_test`.`locs` (`location_id` INT NOT NULL , `location_name` TEXT NOT NULL , `location_type` INT NOT NULL , `weather` INT NOT NULL , `clouds` FLOAT NOT NULL , `water_vapor` FLOAT NOT NULL , `temperature` INT NOT NULL , `local_water` FLOAT NOT NULL , `timestamp_id` INT NOT NULL) ENGINE = InnoDB;";
+        
+                $statement = $pdo->prepare($worldsTable);            
+                $statement->execute();
+                $statement = $pdo->prepare($locsTable);            
+                $statement->execute();                        
+                return true;
+            }
+            catch(PDOException $e)
+            {
+                echo $e;
+                return false;
+            }
         }
-        catch(PDOException $e)
+        else
         {
-            echo $e;
+            echo "\nThe database path is not set.\n";
             return false;
         }
     }
@@ -103,6 +125,7 @@ class WeatherSystemDataAccess
         catch(Exception $e)
         {
             echo "Imposible to reach the database. Error: " . $e;
+            return false;
         }        
     }
 

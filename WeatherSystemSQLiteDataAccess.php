@@ -25,25 +25,37 @@ class WeatherSystemSQLiteDataAccess
         }
     }
 
+    /**
+     * Creates the required tables at the previously specified database. This doesn't fill the tables with any data.
+     * @return bool True if success, False if fail.
+     */
     public function CreateTables()
     {
         $pdo = new PDO('sqlite:' . self::$DBPath);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        try
+        if(self::$DBPath !== null)
         {
-            $worldsTable = "CREATE TABLE IF NOT EXISTS `worlds` (`season_day` int(11) NOT NULL,`season_direction` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
-            $locsTable = "CREATE TABLE IF NOT EXISTS `weather_test`.`locs` (`location_id` INT NOT NULL , `location_name` TEXT NOT NULL , `location_type` INT NOT NULL , `weather` INT NOT NULL , `clouds` FLOAT NOT NULL , `water_vapor` FLOAT NOT NULL , `temperature` INT NOT NULL , `local_water` FLOAT NOT NULL , `timestamp_id` INT NOT NULL) ENGINE = InnoDB;";
-    
-            $statement = $pdo->prepare($worldsTable);            
-            $statement->execute();
-            $statement = $pdo->prepare($locsTable);            
-            $statement->execute();                        
-            return true;
+            try
+            {
+                $worldsTable = "CREATE TABLE IF NOT EXISTS `worlds` (`season_day` int(11) NOT NULL,`season_direction` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+                $locsTable = "CREATE TABLE IF NOT EXISTS `weather_test`.`locs` (`location_id` INT NOT NULL , `location_name` TEXT NOT NULL , `location_type` INT NOT NULL , `weather` INT NOT NULL , `clouds` FLOAT NOT NULL , `water_vapor` FLOAT NOT NULL , `temperature` INT NOT NULL , `local_water` FLOAT NOT NULL , `timestamp_id` INT NOT NULL) ENGINE = InnoDB;";
+        
+                $statement = $pdo->prepare($worldsTable);            
+                $statement->execute();
+                $statement = $pdo->prepare($locsTable);            
+                $statement->execute();                        
+                return true;
+            }
+            catch(PDOException $e)
+            {
+                echo $e;
+                return false;
+            }
         }
-        catch(PDOException $e)
+        else
         {
-            echo $e;
+            echo "\nThe database path is not set.\n";
             return false;
         }
     }
@@ -85,6 +97,7 @@ class WeatherSystemSQLiteDataAccess
         catch(Exception $e)
         {
             echo "Imposible to reach the database. Error: " . $e;
+            return false;
         }
     }
 
