@@ -1,4 +1,8 @@
 <?php
+/**
+  * Provides connection with a given MySQL DB where the tables with the season and locations are stored.
+ * Provides public functions to read, update and write both season's and location's data.
+ */
 class WeatherSystemDataAccess
 {    
     private static $hostname;
@@ -65,6 +69,7 @@ class WeatherSystemDataAccess
         $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
         $pdo = new PDO($dsn, self::$username, self::$password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $seasonControl = new SeasonControl();
 
         try
         {  
@@ -74,10 +79,9 @@ class WeatherSystemDataAccess
 
             if(count($data) > 0)
             {                
-                $seasonControl = new SeasonControl();
                 $seasonControl->SetDay($data['season_day']);
 
-                if($data['season_direction'] == 0)
+                if($data['season_direction'] === 0)
                 {
                     $seasonControl->SetGoingForward(false);            
                 }
@@ -99,8 +103,7 @@ class WeatherSystemDataAccess
         catch(Exception $e)
         {
             echo "Imposible to reach the database. Error: " . $e;
-        }
-        
+        }        
     }
 
     public function UpdateSeasonDataToDB(SeasonControl $seasonControl, string $table)
@@ -140,10 +143,10 @@ class WeatherSystemDataAccess
         $locationArray = [];
         $dsn = "mysql:host=" . self::$hostname . ";dbname=" . self::$database;
         $pdo = new PDO($dsn, self::$username, self::$password);        
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);            
 
         try
         {
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);            
             $query = '';
             if(self::$historical === true && $limit === null)
             {
