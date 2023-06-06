@@ -58,7 +58,8 @@ class Location
                 $this->temperature = $value;
                 break;
             case 'localWater':
-                $this->localWater = $value;
+                $this->localWater = $value;                
+                break;
         }
     }
 

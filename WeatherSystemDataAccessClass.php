@@ -119,8 +119,7 @@ class WeatherSystemDataAccess
             else
             {
                 die( "The table is empty." );
-            }
-            
+            }            
         }
         catch(Exception $e)
         {
