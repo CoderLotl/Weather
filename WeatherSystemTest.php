@@ -5,6 +5,7 @@ require('TemperatureParametersClass.php');
 require('SeasonControlClass.php');
 require('WeatherMachineClass.php');
 require('LocationClass.php');
+require('SimpleClock.php');
 
 //////////////////////////
 /* NOTES */
@@ -33,50 +34,37 @@ $days = 3; // Amount of days to run
 $weatherMachine = new WeatherMachine();
 $locationArray = '';
 $seasonControl = '';
-$weatherSystemDataAccessSQLite = '';
-$weatherSystemdataAccess = '';
+$dataAccess = '';
+$clock = '';
 
 switch($option)
 {
     case 1: // SQLITE
         WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db"); // Setting the database we're gonna work with.
-        $weatherSystemDataAccessSQLite = new WeatherSystemSQLiteDataAccess();
-        $seasonControl = $weatherSystemDataAccessSQLite->ReadSeasonDataFromDB("worlds"); // Creating the Season Control object, passing the table name the Control is going to work with.
+        $dataAccess = new WeatherSystemSQLiteDataAccess();        
         break;
     case 2: // MYSQL
         WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test');
-        $weatherSystemdataAccess = new WeatherSystemDataAccess();
-        $seasonControl = $weatherSystemdataAccess->ReadSeasonDataFromDB("worlds");
+        $dataAccess = new WeatherSystemDataAccess();                
         break;
 }
+
+$seasonControl = $dataAccess->ReadSeasonDataFromDB("worlds");
+$clock = new SimpleClock($dataAccess);
 
 
 $day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
 //$day = ['midday'];
 
-switch($option)
+if($dataAccess::GetDBParams('histoical') === true)
 {
-    case 1: // SQLITE
-        if(WeatherSystemSQLiteDataAccess::GetDBParams('historical') == true)
-        {            
-            $locationArray = $weatherSystemdataAccessSQLite->ReadLocationDataFromDB('locs', 2);
-        }
-        else
-        {
-            $locationArray = $weatherSystemDataAccessSQLite->ReadLocationDataFromDB("locs");
-        }
-        break;
-    case 2: // MYSQL
-        if(WeatherSystemDataAccess::GetDBParams('historical') === true)
-        {            
-            $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB('locs', 2);
-        }
-        else
-        {            
-            $locationArray = $weatherSystemdataAccess->ReadLocationDataFromDB('locs');
-        }
-        break;
-}   
+    $locationArray = $dataAccess->ReadLocationDataFromDB('locs', 2);
+}
+else
+{
+    $locationArray = $dataAccess->ReadLocationDataFromDB("locs");
+}
+
 
 for($i = 0; $i < $days; $i ++)
 {
@@ -100,15 +88,8 @@ for($i = 0; $i < $days; $i ++)
     }
 }
 
-if($option === 2)
+$dataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
+if(WeatherSystemDataAccess::GetDBParams('historical') === true)
 {
-    $weatherSystemdataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
-    if(WeatherSystemDataAccess::GetDBParams('historical') === true)
-    {
-        $weatherSystemdataAccess->WriteLocationsToDB($locationArray, 'test');
-    }
-}
-else
-{
-    $weatherSystemDataAccessSQLite->UpdateAllLocationsDataToDB($locationArray, 'locs');
+    $weatherSystemdataAccess->WriteLocationsToDB($locationArray, 'test');
 }
