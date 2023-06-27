@@ -204,7 +204,7 @@ class WeatherSystemSQLiteDataAccess
         }
     }
 
-    public function UpdateAllLocationsDataToDB($locations, string $table)
+    public function UpdateAllLocationsAtDB($locations, string $table)
     {
         $pdo = new PDO('sqlite:' . self::$DBPath);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

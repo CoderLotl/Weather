@@ -5,7 +5,6 @@ require('TemperatureParametersClass.php');
 require('SeasonControlClass.php');
 require('WeatherMachineClass.php');
 require('LocationClass.php');
-require('SimpleClock.php');
 
 //////////////////////////
 /* NOTES */
@@ -30,7 +29,7 @@ require('SimpleClock.php');
 // - - - - - - - - - - -
 
 $option = 1; // 1 = SQLITE - - - 2 = MYSQL
-$days = 3; // Amount of days to run
+$days = 50; // Amount of days to run
 $weatherMachine = new WeatherMachine();
 $locationArray = '';
 $seasonControl = '';
@@ -50,8 +49,6 @@ switch($option)
 }
 
 $seasonControl = $dataAccess->ReadSeasonDataFromDB("worlds");
-$clock = new SimpleClock($dataAccess);
-
 
 $day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
 //$day = ['midday'];
@@ -86,8 +83,10 @@ for($i = 0; $i < $days; $i ++)
             }            
         }          
     }
+    $seasonControl->Tick();
 }
 
+$dataAccess->UpdateSeasonDataToDB($seasonControl, 'worlds');
 $dataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
 if(WeatherSystemDataAccess::GetDBParams('historical') === true)
 {
