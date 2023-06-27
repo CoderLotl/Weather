@@ -4,11 +4,12 @@ class SeasonControl
 {
     // - - - ATTRIBUTES
     private $day;
-    private $goingForward;    
-    
-    // - - - CONSTRUCTOR
+    private $goingForward;
+
     public function __construct()
-    {        
+    {
+        $this->day = 0;
+        $this->goingForward = true;
     }
 
     // - - - PROPERTIES
@@ -29,48 +30,16 @@ class SeasonControl
         $this->goingForward = $value;
     }
 
-    // - - - METHODS
-    public function Tick()
-    {        
-        $previousDay = $this->day;
-        if($this->goingForward == true)
-        {
-            if($this->day != 42)
-            {
-                $this->day++;
-            }
-            else
-            {
-                $this->goingForward = false;
-                $this->day--;
-            }
-        }
-        else
-        {
-            if($this->day != -42)
-            {
-                $this->day--;
-            }
-            else
-            {
-                $this->goingForward = true;
-                $this->goingForward++;
-            }
-        }
-        echo 'Previous day: ' . $previousDay . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";        
-    }
-
-    public function CustomTick(int $amountOfDays)
+    private function UpdateDay(int $amountOfDays)
     {
-        $previousDay = $this->day;
         if($amountOfDays >= 0) // IF THE VALUE IS POSITIVE
         {
-            if($this->goingForward == true) // ... AND THE YEAR IS GOING FORWARD
+            if($this->goingForward === true) // ... AND THE YEAR IS GOING FORWARD
             {
                 if( ($this->day + $amountOfDays) <= 42)
                 {
                     $this->day += $amountOfDays;
-                    if($this->day == 42)
+                    if($this->day === 42)
                     {
                         $this->goingForward = false;
                     }
@@ -87,7 +56,7 @@ class SeasonControl
                 if( ($this->day - $amountOfDays) >= -42)
                 {
                     $this->day -= $amountOfDays;
-                    if($this->day == -42)
+                    if($this->day === -42)
                     {
                         $this->goingForward = true;
                     }
@@ -100,10 +69,9 @@ class SeasonControl
                 }
             }
         }
-
         elseif($amountOfDays <=0) // IF THE VALUE IS NEGATIVE
         {
-            if($this->goingForward == true) // ... AND THE YEAR IS GOING FORWARD
+            if($this->goingForward === true) // ... AND THE YEAR IS GOING FORWARD
             {
                 if( ($this->day + $amountOfDays) >= -42)
                 {
@@ -121,7 +89,7 @@ class SeasonControl
                 if( ($this->day - $amountOfDays) <= 42)
                 {
                     $this->day -= $amountOfDays;
-                    if($this->day == 42)
+                    if($this->day === 42)
                     {
                         $this->goingForward = true;
                     }
@@ -133,13 +101,27 @@ class SeasonControl
                     $this->goingForward = true;
                 }
             }
-        }        
+        } 
+    }
+
+    // - - - METHODS
+    public function Tick()
+    {        
+        $previousDay = $this->day;
+        $this->UpdateDay(1);
+        echo 'Previous day: ' . $previousDay . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";        
+    }
+
+    public function CustomTick(int $amountOfDays)
+    {
+        $previousDay = $this->day;
+        $this->UpdateDay($amountOfDays);
         echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
     } 
 
     public function ReturnSeasonAsString()
     {
-        if( ($this->day >= 22 && $this->goingForward == true) || ($this->day >= 21 && $this->goingForward == false) )
+        if( ($this->day >= 22 && $this->goingForward === true) || ($this->day >= 21 && $this->goingForward === false) )
         {
             $season = "Summer";
         }
