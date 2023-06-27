@@ -402,7 +402,7 @@ class WeatherMachine
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     /**
-     * Calculates the saturation point humidity for the given temperature.
+     * Calculates the saturation point of humidity for the given temperature.
      * @param mixed $temperature
      * 
      * @return [type]
@@ -417,10 +417,11 @@ class WeatherMachine
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     /**
-     * Calculates the relative humidity based on the current temperature and humidity.
+     * Calculates the relative humidity based on the current temperature and water vapor.
+     * Returns a string with the number cut to 3 decimals.
      * @param Location $location
      * 
-     * @return [type]
+     * @return string
      */
     public function CalcRelativeHumidity(Location $location)
     {
@@ -436,10 +437,11 @@ class WeatherMachine
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     #region WEATHER
     /**
-     * 
+     * Calculates the weather for the current tick at the given location based on its own parameters
+     * and the static constants of the Weather Machine (this class).
      * @param Location $location
      * 
-     * @return [type]
+     * @return void
      */
     private function CalcNewWeather(Location $location)
     {
@@ -490,6 +492,12 @@ class WeatherMachine
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     #region RAIN
+    /**
+     * Calculates and returns the chances of rain for the location.
+     * @param Location $location
+     * 
+     * @return int|false chances of rain or false if it doesn't rain at the location.
+     */
     private function CalcRainChances(Location $location)
     {
         foreach($this::placesWithNoRain as $placeType)
@@ -516,11 +524,17 @@ class WeatherMachine
         return $chancesOfRain;
     }
 
+    /**
+     * Turns clouds into rain, returning water to the ground level.
+     * The percentage of water returned is set at $this::precipitationFactor.     
+     * @param Location $location
+     * 
+     * @return void
+     */
     private function CastSomeRain(Location $location)
     {
         $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::precipitationFactor / 100);
-
-        // HERE I HAVE TO SET THE NEW WEATHER. PROBABLY BASED ON THE AMOUNT OF WATER MOVED.
+        
         $location->__set('weather', $this->CalculateRainIntensity($returningWater));
 
         echo "\nWater moved by the rain: " . $returningWater;
@@ -530,6 +544,12 @@ class WeatherMachine
         echo "\nNew clouds: " . $location->__get("clouds") . " | New water: " . $location->__get("localWater");
     }
 
+    /**
+     * Sets the rain intensity based on the amount of water returning to the ground.
+     * @param float $returningWater
+     * 
+     * @return int
+     */
     private function CalculateRainIntensity(float $returningWater)
     {
         if($returningWater <= 20)
@@ -558,9 +578,10 @@ class WeatherMachine
     #region WIND
     /**
      * This function checks if the location has wind or not and, if possitive, calculates the chance of some gust of wind happening.
+     * Wind is a 'magical' way of returning water to the ground silently. That is: without actually making it rain.
      * @param Location $location The location we are working with.
      * 
-     * @return [type] True if there's chance of wind, false if there's not or if the place has no wind.
+     * @return true|false True if there's chance of wind, false if there's not or if the place has no wind.
      */
     private function CheckForBlowingWind(Location $location)
     {
@@ -585,7 +606,7 @@ class WeatherMachine
      * Removes some water from the clouds and returns it to the ground without directly affecting the weather. Useful for those places that have no rain and no dew but you need to complete the water cycle anyway.
      * @param Location $location The location we are working with.
      * 
-     * @return [type] Void.
+     * @return void.
      */
     private function BlowSomeWind(Location $location)
     {
