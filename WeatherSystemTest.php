@@ -28,8 +28,8 @@ require('LocationClass.php');
 // - - - [ TEST ] - - - * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // - - - - - - - - - - -
 
-$option = 2; // 1 = SQLITE - - - 2 = MYSQL
-
+$option = 1; // 1 = SQLITE - - - 2 = MYSQL
+$days = 3; // Amount of days to run
 $weatherMachine = new WeatherMachine();
 $locationArray = '';
 $seasonControl = '';
@@ -78,7 +78,7 @@ switch($option)
         break;
 }   
 
-for($i = 0; $i < 1; $i ++)
+for($i = 0; $i < $days; $i ++)
 {
     foreach($day as $dayStage)
     {

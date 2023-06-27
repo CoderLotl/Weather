@@ -552,19 +552,19 @@ class WeatherMachine
      */
     private function CalculateRainIntensity(float $returningWater)
     {
-        if($returningWater <= 20)
+        if($returningWater <= 10)
         {
             return 2;
         }
-        elseif($returningWater <= 40 && $returningWater >= 20)
+        elseif($returningWater <= 15 && $returningWater > 10)
         {
             return 3;
         }
-        elseif($returningWater <= 60 && $returningWater >= 40)
+        elseif($returningWater <= 20 && $returningWater > 15)
         {
             return 4;
         }
-        elseif($returningWater <= 60 && $returningWater >= 80)
+        elseif($returningWater <= 25 && $returningWater > 20)
         {
             return 5;
         }

@@ -164,19 +164,19 @@ class Location
             case ($clouds >= 5 && $clouds < 10):
                 $returnValue = "Fair";
                 break;
-            case ($clouds >= 10 && $clouds < 20):
+            case ($clouds >= 10 && $clouds < 15):
                 $returnValue = "A few clouds";
                 break;
-            case ($clouds >= 20 && $clouds < 30):
+            case ($clouds >= 15 && $clouds < 20):
                 $returnValue = "Fairly clouded";
                 break;
-            case ($clouds >= 30 && $clouds < 50):
+            case ($clouds >= 20 && $clouds < 25):
                 $returnValue = "Clouded";
                 break;
-            case ($clouds >= 50 && $clouds < 70):
+            case ($clouds >= 25 && $clouds < 30):
                 $returnValue = "Very clouded";
                 break;
-            case ($clouds >= 70):
+            case ($clouds >= 30):
                 $returnValue = "Heavily clouded";
                 break;
         }
