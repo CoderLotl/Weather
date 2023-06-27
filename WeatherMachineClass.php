@@ -84,8 +84,7 @@ class WeatherMachine
         
                     $this->CheckWaterLimits($location);
                 }
-            }        
-
+            }
             return true; // Returns the previous instance if the calculation was successful or not.
         }
         else
@@ -223,7 +222,6 @@ class WeatherMachine
         {
             $cloudification = 0;
         }
-
         return $cloudification;
     }
 
@@ -280,8 +278,7 @@ class WeatherMachine
         else
         {
             $waterEvaporation = 0;
-        }
-        
+        }        
         return $waterEvaporation;
     }
 
@@ -371,12 +368,10 @@ class WeatherMachine
                         }
                     }
                     echo "\nLocation's liquids have been corrected.\n";
-                }
-                
+                }                
                 break;
             }
-        }
-        
+        }        
     }
 
     /**
@@ -782,26 +777,18 @@ class WeatherMachine
         {
             // WEATHER STAGES: [0: Not raining. 1: Dew. 2: Light rain. 3: rain. 4: downpour. 5: storm.]
             case 0:
-                $param = 0;
-                break;
+                return 0;                
             case 1:
-                $param = 0;
-                break;
+                return 0;                
             case 2:
-                $param = 0;
-                break;
+                return 0;                
             case 3:
-                $param = 0;
-                break;
+                return 0;                
             case 4:
-                $param = 0;
-                break;
+                return 0;
             case 5:
-                $param = 0;
-                break;
-        }
-
-        return $param;
+                return 0;
+         }        
     }
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
