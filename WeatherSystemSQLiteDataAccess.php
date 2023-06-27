@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Provides connection with a given SQLite DB where the tables with the season and locations are stored.
  * Provides public functions to read, update and write both season's and location's data.
