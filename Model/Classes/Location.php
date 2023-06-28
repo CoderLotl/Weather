@@ -122,30 +122,21 @@ class Location
         $weather = $this->__get("weather");
         switch($weather)
         {
-            case 0:
-                $returnValue = "Not raining";
-                break;
+            case 0:                
+                return "Not raining";                
             case 1:
-                $returnValue = "Dew";
-                break;
+                return ($this->temperature <= 0) ? "Not raining" : "Dew";                
             case 2:
-                $returnValue = "Drizzle";
-                break;
+                return ($this->temperature <= 0) ?  "Snow flurries" : "Drizzle";                
             case 3:
-                $returnValue = "Light rain";
-                break;
+                return ($this->temperature <= 0) ? "Light snow" : "Light rain";                
             case 4:
-                $returnValue = "Rain";
-                break;
+                return ($this->temperature <= 0) ? "Snowing" : "Rain";                
             case 5:
-                $returnValue = "Downpour";
-                break;
+                return ($this->temperature <= 0) ? "Heavy snow" : "Downpour";                
             case 6:
-                $returnValue = "Storm";
-                break;
-        }
-
-        return $returnValue;
+                return ($this->temperature <= 0) ? "Blizzard" : "Storm";                
+        }        
     }
 
     /**
