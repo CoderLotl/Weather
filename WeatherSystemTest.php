@@ -1,10 +1,5 @@
 <?php
-require('WeatherSystemSQLiteDataAccess.php');
-require('WeatherSystemDataAccessClass.php');
-require('TemperatureParametersClass.php');
-require('SeasonControlClass.php');
-require('WeatherMachineClass.php');
-require('LocationClass.php');
+require('autoloader.php');
 
 //////////////////////////
 /* NOTES */
@@ -29,7 +24,7 @@ require('LocationClass.php');
 // - - - - - - - - - - -
 
 $option = 1; // 1 = SQLITE - - - 2 = MYSQL
-$days = 50; // Amount of days to run
+$days = 1; // Amount of days to run
 $weatherMachine = new WeatherMachine();
 $locationArray = '';
 $seasonControl = '';
@@ -51,7 +46,6 @@ switch($option)
 $seasonControl = $dataAccess->ReadSeasonDataFromDB("worlds");
 
 $day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
-//$day = ['midday'];
 
 if($dataAccess::GetDBParams('histoical') === true)
 {
