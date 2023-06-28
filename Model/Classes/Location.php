@@ -37,29 +37,21 @@ class Location
         switch($name)
         {
             case 'id':
-                $this->locationID = $value;
-                break;
+                return $this->locationID = $value;                
             case 'name':
-                $this->locationName = $value;
-                break;
+                return $this->locationName = $value;                
             case 'type':
-                $this->locationType = $value;
-                break;
+                return $this->locationType = $value;                
             case 'weather':
-                $this->weather = $value;
-                break;
+                return $this->weather = $value;                
             case 'clouds':
-                $this->clouds = $value;
-                break;
+                return $this->clouds = $value;                
             case 'waterVapor':
-                $this->waterVapor = $value;
-                break;
+                return $this->waterVapor = $value;                
             case 'temperature':
-                $this->temperature = $value;
-                break;
+                return $this->temperature = $value;                
             case 'localWater':
-                $this->localWater = $value;                
-                break;
+                return $this->localWater = $value;                                
         }
     }
 
@@ -118,7 +110,7 @@ class Location
     private function TranslateWeather()
     {
         // WEATHER STAGES: [ 0: Not raining. 1: Dew. 2: Drizzle. 3: Light rain. 4: rain. 5: downpour. 6: storm.]
-        $returnValue = "";
+        return "";
         $weather = $this->__get("weather");
         switch($weather)
         {
@@ -144,34 +136,25 @@ class Location
      * @return string
      */
     private function TranslateCloudsValue()
-    {
-        $returnValue = "";
+    {        
         $clouds = $this->clouds;
         switch($clouds)
         {
             case ($clouds >= 0 && $clouds < 5):
-                $returnValue = "Clear";
-                break;
+                return "Clear";                
             case ($clouds >= 5 && $clouds < 10):
-                $returnValue = "Fair";
-                break;
+                return "Fair";                
             case ($clouds >= 10 && $clouds < 15):
-                $returnValue = "A few clouds";
-                break;
+                return "A few clouds";                
             case ($clouds >= 15 && $clouds < 20):
-                $returnValue = "Fairly clouded";
-                break;
+                return "Fairly clouded";                
             case ($clouds >= 20 && $clouds < 25):
-                $returnValue = "Clouded";
-                break;
+                return "Clouded";                
             case ($clouds >= 25 && $clouds < 30):
-                $returnValue = "Very clouded";
-                break;
+                return "Very clouded";                
             case ($clouds >= 30):
-                $returnValue = "Heavily clouded";
-                break;
-        }
-        return $returnValue;
+                return "Heavily clouded";                
+        }        
     }
     #endregion
 }
