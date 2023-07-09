@@ -1,9 +1,13 @@
 # Weather
 
-// - - - - - - - - -
+---
+
+DESCRIPTION
+
+The Weather System is a generic back-end mechanism developed for the game URPG from [TinyDark Studio](blank:#https://tinydark.com/).
 
 // - - - [ DOCUMENTATION ] - - -
-/*
+
 
 The weather system is controlled by the class WeatherMachine, which has no constructor and only 1 public function.
 
@@ -68,4 +72,4 @@ The INDEX, by the way, is obtained by the function ReturnIndexByDayStage($daySta
 The final equation is simply summing the temperature with a modifyer, which may be either positive or negative, and it's a percentage of the current temperature set by the current weather.
 
 
-*/
+
