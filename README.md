@@ -5,6 +5,7 @@
 The Weather System is a generic and rather simple back-end mechanism developed for the game **URPG** from [TinyDark Studio](https://tinydark.com/).
 It has been designed under the specifications of **Vael Victus**, URPG's owner, and granted the status of *free to use* code.
 It's purpose is to simulate weather changes through a custom year cycle for the game's locations, generating a rather complex climate and the sensation of Seasons.
+The system simulates temperature changes and variations, and water cycles (evaporation, cloudification, and precipitation).
 
 The system is programmed in OOP and is designed to work with SQLite and MySQL. It has also been designed to work with seasons of 21 days (3 weeks), with 1 year-cycle being 84 days.
 Cycles can be modified through code manipulation though, which makes the system flexible and adaptable for different contexts.
