@@ -1,5 +1,7 @@
 <?php
 
+require dirname(dirname(__DIR__)) . '/config.php';
+
 class SeasonControl
 {
     // - - - ATTRIBUTES
@@ -36,35 +38,35 @@ class SeasonControl
         {
             if($this->goingForward === true) // ... AND THE YEAR IS GOING FORWARD
             {
-                if( ($this->day + $amountOfDays) <= 42)
+                if( ($this->day + $amountOfDays) <= (cycle / 4))
                 {
                     $this->day += $amountOfDays;
-                    if($this->day === 42)
+                    if($this->day === (cycle / 4))
                     {
                         $this->goingForward = false;
                     }
                 }
                 else // IF THERE'S AN EXCESS ... THE YEAR IS GOING TO GO BACKWARDS AFTER THIS.
                 {
-                    $excess = ($this->day + $amountOfDays) - 42;
-                    $this->day = 42 - $excess;
+                    $excess = ($this->day + $amountOfDays) - (cycle / 4);
+                    $this->day = (cycle / 4) - $excess;
                     $this->goingForward = false;
                 }
             }
             else // ... ELSE, IF THE YEAR IS GOING BACKWARDS...
             {
-                if( ($this->day - $amountOfDays) >= -42)
+                if( ($this->day - $amountOfDays) >= - (cycle / 4))
                 {
                     $this->day -= $amountOfDays;
-                    if($this->day === -42)
+                    if($this->day === - (cycle / 4))
                     {
                         $this->goingForward = true;
                     }
                 }
                 else
                 {
-                    $excess = ($this->day - $amountOfDays) + 42;
-                    $this->day = -42 - $excess;
+                    $excess = ($this->day - $amountOfDays) + (cycle / 4);
+                    $this->day = -(cycle / 4) - $excess;
                     $this->goingForward = true;
                 }
             }
@@ -73,31 +75,31 @@ class SeasonControl
         {
             if($this->goingForward === true) // ... AND THE YEAR IS GOING FORWARD
             {
-                if( ($this->day + $amountOfDays) >= -42)
+                if( ($this->day + $amountOfDays) >= - (cycle / 4))
                 {
                     $this->day += $amountOfDays;
                 }
                 else // IF THERE'S AN EXCESS ... THE YEAR IS GOING TO GO BACKWARDS AFTER THIS.
                 {
-                    $excess = ($this->day + $amountOfDays) + 42;
-                    $this->day = -42 - $excess;
+                    $excess = ($this->day + $amountOfDays) + (cycle / 4);
+                    $this->day = - (cycle / 4) - $excess;
                     $this->goingForward = false;
                 }
             }
             else // ... ELSE, IF THE YEAR IS GOING BACKWARDS...
             {
-                if( ($this->day - $amountOfDays) <= 42)
+                if( ($this->day - $amountOfDays) <= (cycle / 4))
                 {
                     $this->day -= $amountOfDays;
-                    if($this->day === 42)
+                    if($this->day === (cycle / 4))
                     {
                         $this->goingForward = true;
                     }
                 }
                 else
                 {
-                    $excess = ($this->day - $amountOfDays) - 42;
-                    $this->day = -42 - $excess;
+                    $excess = ($this->day - $amountOfDays) - (cycle / 4);
+                    $this->day = - (cycle / 4) - $excess;
                     $this->goingForward = true;
                 }
             }
@@ -121,15 +123,15 @@ class SeasonControl
 
     public function ReturnSeasonAsString()
     {
-        if( ($this->day >= 22 && $this->goingForward === true) || ($this->day >= 21 && $this->goingForward === false) )
-        {
-            $season = "Summer";
-        }
-        elseif( ($this->day >= -20 && $this->day <= 21) && $this->goingForward == true)
+        if( ($this->day >= seasons['Spring'][0] && $this->day <= seasons['Spring'][1]) && $this->goingForward == true)
         {
             $season = "Spring";
         }
-        elseif( ($this->day <= 20 && $this->day >= -21) && $this->goingForward == false)
+        elseif( ($this->day >= seasons['Summer'][0] && $this->goingForward === true) || ($this->day >= seasons['Summer'][1] && $this->goingForward === false) )
+        {
+            $season = "Summer";
+        }
+        elseif( ($this->day <= seasons['Fall'][0] && $this->day >= -seasons['Fall'][1]) && $this->goingForward == false)
         {
             $season = "Fall";
         }

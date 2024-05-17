@@ -2,49 +2,6 @@
 
 class WeatherMachine
 {
-    /////////////////////////////////////////////////////////////
-    #region - - - CONTROL OF CONSTANT VARIABLES - - -
-
-    // IDS: 1 [plains, meadows], 2 [jungles], 3 [woods, forests], 4 [deserts], 5 [mountains], 6 [swamps], 7 [canyons], 8 [lake], 9 [taiga], 10 [tundra], 11 [tundra deep]
-
-    // Machine MAIN Control
-    private const applyTemperature = true; // If set to false, no temperature calculation will be executed (and therefore no weather too).
-    private const applyWeather = true; // If set to false, no weather calculations will be executed.
-
-    // Chances Control
-    private const blowingWindChances = 35; // The chances of some 'wind' actually returning some water to the ground without actual rain.
-    private const blowingWindReturn = 35; // The amount of water returned to the ground by 'some means'. The system doesn't contemplate the exitence of wind, but water has to return somehow and clouds have to go sometimes.
-    private const dewFactor = 35; // The percentage of water vapor that returns back to the ground in the form of dew.
-    private const precipitationFactor = 35; // Similar to the above, this controls the percentage of water returned to ground by the rain.
-    
-    // Dew Control
-    // Types of locations: 1: plains/meadows. 2: jungle. 3: woods/forest. 4: desert. 5: mountains. 6: swamp. 7: canyon. 8: lake. 9: taiga. 10: tundra. 11: tundra (deep)
-    private const lowDewTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // The types of locations which have low atmosphere dew.
-    private const highDewTypes = [4, 7]; // The types of locations which have cloud dew.
-    
-    // Rain and Wind Control
-    private const windAndRainCloudReduction = true; // If true, clouds are going to get reduced both by rain and by some kind of wind, returning water to the grund.
-    private const firstOrder = 1; // 1 = wind. 2 = rain.
-    private const placesWithNoRain = [4, 7]; // The location types id of those places where you don't want it to rain.
-    private const placesWithNoWind = [1, 2, 3, 5, 6, 8, 9, 10, 11]; // The location types id of those places where you don't want it to be any wind.
-
-    // Water Checking
-    private const waterLimits = ['1'=>100, '2'=>250, '3'=>200, '4'=>15, '5'=>50, '6'=>1000, '7'=>15, '8'=>1000, '9'=>100, '10'=>30, '11'=>30];
-    // These are the water limits for each region, ideally measured as grams of water per cubic meter.
-
-    // WATER LIMITS REFERENCE
-    /*15 -> DESERT
-    15 -> CANYON
-    50 -> MOUNTAINS
-    30 -> TUNDRA
-    100 -> PLAINS / MEADOWS / TAIGA
-    200 -> WOODS / FOREST
-    1000 -> SWAMPS / LAKE
-    250 -> JUNGLES*/
-
-    /////////////////////////////////////////////////////////////
-
-    #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -63,12 +20,12 @@ class WeatherMachine
         if($location->__get("type") !== -1) // Locations of type -1 will be ignored completely. This is useful for places where you don't want the calc to happen.
         {
             // CALCULATING AND SETTING THE NEW TEMPERATURE
-            if(self::applyTemperature === true)
+            if(applyTemperature === true)
             {
                 $temperature = $this->CalcNewTemperature($season, $location->__get("type"), $dayStage, $location->__get("weather"));
                 $location->__set("temperature", $temperature);
 
-                if(self::applyWeather === true)
+                if(applyWeather === true)
                 {
                     // CALCULATING AND APPLYING EVAPORATION
                     $this->ApplyWaterEvaporation($location);
@@ -108,7 +65,7 @@ class WeatherMachine
 
         if($previousWeather <= 1) // If it's not raining (which would be 2 or more)...
         {
-            if(in_array($location->__get("type"), $this::lowDewTypes)) // If the current location has low atmosphere dew...
+            if(in_array($location->__get("type"), lowDewTypes)) // If the current location has low atmosphere dew...
             {
                 $this->ExecuteDewPrecipitation($location, "waterVapor", $lowerAtmosphereDew); // ... I check for low atm. dew.
     
@@ -117,7 +74,7 @@ class WeatherMachine
                     $lowerAtmosphereDew = true; // ... the dew is happening at the lower atmosphere.
                 }
             }
-            if(in_array($location->__get("type"), $this::highDewTypes)) // If the current location has cloud dew...
+            if(in_array($location->__get("type"), highDewTypes)) // If the current location has cloud dew...
             {
                 $this->ExecuteDewPrecipitation($location, "clouds", $lowerAtmosphereDew); // ... I check for cloud dew.
             }
@@ -162,7 +119,7 @@ class WeatherMachine
         if($humiditySource > 1 && $humiditySource >= $saturationPoint)
         {
             // - - - DEW EXECUTION - - -
-            $dewAmount = ($humiditySource * $this::dewFactor) / 100;
+            $dewAmount = ($humiditySource * dewFactor) / 100;
 
             if($source === "waterVapor")
             {
@@ -327,7 +284,7 @@ class WeatherMachine
         $localWater = $location->__get('localWater');
         $waterVapor = $location->__get('waterVapor');
 
-        foreach(self::waterLimits as $limit => $value)
+        foreach(waterLimits as $limit => $value)
         {
             if($location->__get('type') === $limit)
             {                
@@ -441,9 +398,9 @@ class WeatherMachine
     private function CalcNewWeather(Location $location)
     {
         echo "\n-----------------------------";
-        if($this::firstOrder === 1)
+        if(firstOrder === 1)
         {
-            if($this::windAndRainCloudReduction === true)
+            if(windAndRainCloudReduction === true)
             {
                 if($this->CheckForBlowingWind($location) === true)
                 {
@@ -474,7 +431,7 @@ class WeatherMachine
                 $rainCloudReduction = false;
                 $location->__set('weather', 0);
             }
-            if($this::windAndRainCloudReduction === true && $rainCloudReduction === false) // If the winds are to reduce the clouds and it hasn't rain at this tick...
+            if(windAndRainCloudReduction === true && $rainCloudReduction === false) // If the winds are to reduce the clouds and it hasn't rain at this tick...
             {
                 if($this->CheckForBlowingWind($location))
                 {
@@ -495,7 +452,7 @@ class WeatherMachine
      */
     private function CalcRainChances(Location $location)
     {
-        foreach($this::placesWithNoRain as $placeType)
+        foreach(placesWithNoRain as $placeType)
         {
             if($location->__get('type') === $placeType)
             {
@@ -521,14 +478,14 @@ class WeatherMachine
 
     /**
      * Turns clouds into rain, returning water to the ground level.
-     * The percentage of water returned is set at $this::precipitationFactor.     
+     * The percentage of water returned is set at precipitationFactor.     
      * @param Location $location
      * 
      * @return void
      */
     private function CastSomeRain(Location $location)
     {
-        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::precipitationFactor / 100);
+        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * precipitationFactor / 100);
         
         $location->__set('weather', $this->CalculateRainIntensity($returningWater));
 
@@ -580,14 +537,14 @@ class WeatherMachine
      */
     private function CheckForBlowingWind(Location $location)
     {
-        foreach($this::placesWithNoWind as $placeType)
+        foreach(placesWithNoWind as $placeType)
         {
             if($location->__get('type') === $placeType)
             {                
                 return false; // If the place's type is on the list of places with no wind, there will be no wind.
             }
         }
-        if(random_int(0,100) <= $this::blowingWindChances)
+        if(random_int(0,100) <= blowingWindChances)
         {
             return true;
         }
@@ -605,7 +562,7 @@ class WeatherMachine
      */
     private function BlowSomeWind(Location $location)
     {
-        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * $this::blowingWindReturn / 100);
+        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * blowingWindReturn / 100);
         echo "\nWater moved by the winds: " . $returningWater;
         echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
         $location->__set("localWater", $location->__get("localWater") + $returningWater);
@@ -623,25 +580,7 @@ class WeatherMachine
      */
     private function ReturnIndexByDayStage(string $dayStage)
     {
-        switch($dayStage)
-        {
-            case 'midnight':
-                return 0;                
-            case 'night':
-                return 1;                
-            case 'dawn':
-                return 2;                
-            case 'morning':
-                return 3;                
-            case 'midday':
-                return 4;                
-            case 'afternoon':
-                return 5;                
-            case 'evening':
-                return 6;                
-            case 'dusk':
-                return 7;                
-        }        
+        return daystage[$dayStage];
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -650,7 +589,7 @@ class WeatherMachine
      * Returns a package of parameters based on the location type. Those parameters are meant to be consumed later by other formulas.
      * @param int $locationType The numeric value that represents the location type.
      * 
-     * @return TemperatureParameters A package class containing several numeric arguments to be consumed by CalcNewTemperature.
+     * @return mixed A package class containing several numeric arguments to be consumed by CalcNewTemperature.
      */
     private function SetParamsByLocation(int $locationType)
     {
@@ -721,7 +660,16 @@ class WeatherMachine
                 break;
         }
 
-        return new TemperatureParameters($tuning, $amplitude, $plus, $topLimits, $bottomLimits);
+        $temperatureParams =
+        [
+            'tuning' => $tuning,
+            'amplitude' => $amplitude,
+            'plus' => $plus,
+            'topLimits' => $topLimits,
+            'bottomLimits' => $bottomLimits
+        ];
+
+        return $temperatureParams;
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -739,7 +687,7 @@ class WeatherMachine
     {
         // NOTE: Temperatures are in C here. For a F value there needs to be a conversion step.
 
-        $timeDivider = 6; // Since the system has been designed to work with units of 7 days and the seasons have 42 days (6 weeks), this is
+        $timeDivider = time_divider; // Since the system has been designed to work with units of 7 days and the seasons have 42 days (6 weeks), this is
                           // an important factor. If the seasons's length ever changes, you can tune it here.
         
         // ------------------------------------------------------ [ INDEX TO USE BY STAGE OF THE DAY ]
@@ -750,8 +698,8 @@ class WeatherMachine
                 
         $params = $this->SetParamsByLocation($locationType); // In order to see the values of the parameters, check the function.
 
-        $tuning = $params->GetTunning(); $amplitude = $params->GetAmplitude(); $plus = $params->GetAmplitude();
-        $topLimits = $params->GetTopLimits($index); $bottomLimits = $params->GetBottomLimits($index);
+        $tuning = $params['tuning']; $amplitude = $params['amplitude']; $plus = $params['plus'];
+        $topLimits = $params['topLimits'][$index]; $bottomLimits = $params['bottomLimits'][$index];
         
         // ------------------------------------------------------ [ WEATHER EFFECT'S PARAM ]
 

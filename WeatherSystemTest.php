@@ -45,8 +45,6 @@ switch($option)
 
 $seasonControl = $dataAccess->ReadSeasonDataFromDB("worlds");
 
-$day = ['midnight', 'night', 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'dusk', 'night'];
-
 if($dataAccess::GetDBParams('histoical') === true)
 {
     $locationArray = $dataAccess->ReadLocationDataFromDB('locs', 2);
@@ -59,7 +57,7 @@ else
 
 for($i = 0; $i < $days; $i ++)
 {
-    foreach($day as $dayStage)
+    foreach(daystage as $dayStage => $dayIndex)
     {
         echo "\n*** LOCATION BLOCK ***";
         echo "\nDay Stage: {$dayStage}";
