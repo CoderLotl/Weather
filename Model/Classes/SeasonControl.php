@@ -121,23 +121,26 @@ class SeasonControl
         echo 'Previous day: ' . $previousDay . ' | Leap: ' . $amountOfDays . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";
     } 
 
-    public function ReturnSeasonAsString()
+    public function ReturnSeasonAsString($day = null, $goingForward = null)
     {
-        if( ($this->day >= seasons['Spring'][0] && $this->day <= seasons['Spring'][1]) && $this->goingForward == true)
+        $funcDay = $day == null ? $this->day : $day;
+        $funcGoingForward = $goingForward == null ? $this->goingForward : ($goingForward == 'true' ? true : false);        
+
+        if( ($funcDay >= seasons['Spring'][0] && $funcDay <= seasons['Spring'][1]) && $funcGoingForward == true)
         {
             $season = "Spring";
         }
-        elseif( ($this->day >= seasons['Summer'][0] && $this->goingForward === true) || ($this->day >= seasons['Summer'][1] && $this->goingForward === false) )
+        elseif( ($funcDay >= seasons['Summer'][0] && $funcGoingForward === true) || ($funcDay >= seasons['Summer'][1] && $funcGoingForward === false) )
         {
             $season = "Summer";
         }
-        elseif( ($this->day <= seasons['Fall'][0] && $this->day >= -seasons['Fall'][1]) && $this->goingForward == false)
+        elseif( ($funcDay <= seasons['Fall'][0] && $funcDay >= seasons['Fall'][1]) && $funcGoingForward == false)
         {
             $season = "Fall";
         }
         else
         {
-            $season = "Winter"; // Winter goes from -22 , up to -42, to -21 again.
+            $season = "Winter";
         }        
         return $season;
     }    
