@@ -25,6 +25,6 @@ require('autoloader.php');
 
 $weatherMachine = new WeatherMachine();
 
-//$weatherMachine->RunDays(1); // Runs 1 full day (8 day stages). Example: from noon of day 1 to noon of day 2.
-//$weatherMachine->RunTillEndOfDay(1); // Runs from whatever point of the day currently is to the end of the day.
-//$weatherMachine->RunSingleDayStage(1); // Runs a single day stage.
+//$weatherMachine->RunDays(); // Runs 1 full day (8 day stages). Example: from noon of day 1 to noon of day 2.
+//$weatherMachine->RunTillEndOfDay(); // Runs from whatever point of the day currently is to the end of the day.
+//$weatherMachine->RunSingleDayStage(); // Runs a single day stage.

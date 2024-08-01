@@ -739,7 +739,11 @@ class WeatherMachine
          }        
     }
 
-    public function RunSingleDayStage(int $option)
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+    // - - - - - - - - - - - - - - - [ EXECUTION ]
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+    public function RunSingleDayStage(int $option = 1)
     {
         $locationArray = '';
         $seasonControl = '';
@@ -806,7 +810,9 @@ class WeatherMachine
         }
     }
 
-    public function RunTillEndOfDay(int $option)
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+    public function RunTillEndOfDay(int $option = 1)
     {
         $locationArray = '';
         $seasonControl = '';
@@ -869,13 +875,15 @@ class WeatherMachine
         }
     }
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
     /**
      * @param int $option 1 = SQLITE - - - 2 = MYSQL
      * @param int $daysToRun Amount of days to run
      * 
      * @return [type]
      */
-    public function RunDays(int $option, int $daysToRun = 1)
+    public function RunDays(int $option = 1, int $daysToRun = 1)
     {        
         $locationArray = '';
         $seasonControl = '';
