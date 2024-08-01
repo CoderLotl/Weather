@@ -738,6 +738,214 @@ class WeatherMachine
                 return 0;
          }        
     }
+
+    public function RunSingleDayStage(int $option)
+    {
+        $locationArray = '';
+        $seasonControl = '';
+        $dataAccess = '';
+
+        switch($option)
+        {
+            case 1: // SQLITE
+                WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db"); // Setting the database we're gonna work with.
+                $dataAccess = new WeatherSystemSQLiteDataAccess();        
+                break;
+            case 2: // MYSQL
+                WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test');
+                $dataAccess = new WeatherSystemDataAccess();                
+                break;
+        }
+
+        $seasonControl = $dataAccess->ReadSeasonDataFromDB("worlds");
+
+        if($dataAccess::GetDBParams('histoical') === true)
+        {
+            $locationArray = $dataAccess->ReadLocationDataFromDB('locs', 2);
+        }
+        else
+        {
+            $locationArray = $dataAccess->ReadLocationDataFromDB("locs");
+        }
+
+        $initialDayStage = $seasonControl->GetDayStage();
+
+        $dayStage = array_search($initialDayStage, daystage); // refactor this
+        echo "\n*** LOCATION BLOCK ***";
+        echo "\nDay Stage: {$dayStage}";
+    
+        echo "\nLocations:\n\n";        
+        
+        foreach($locationArray as $newLocation)
+        {
+            if($this->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage) == true)
+            {                
+                echo $newLocation . "\n-------\n";
+
+                $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
+            }            
+        }
+        $initialDayStage++;
+
+        if($initialDayStage > 7)
+        {
+            $seasonControl->SetDayStage(0);
+            $seasonControl->Tick();
+        }
+        else
+        {
+            $seasonControl->SetDayStage($initialDayStage);            
+        }
+
+        $dataAccess->UpdateSeasonDataToDB($seasonControl, 'worlds');
+        $dataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
+        if($dataAccess::GetDBParams('historical') === true)
+        {
+            $dataAccess->WriteLocationsToDB($locationArray, 'test');
+        }
+    }
+
+    public function RunTillEndOfDay(int $option)
+    {
+        $locationArray = '';
+        $seasonControl = '';
+        $dataAccess = '';
+
+        switch($option)
+        {
+            case 1: // SQLITE
+                WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db"); // Setting the database we're gonna work with.
+                $dataAccess = new WeatherSystemSQLiteDataAccess();        
+                break;
+            case 2: // MYSQL
+                WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test');
+                $dataAccess = new WeatherSystemDataAccess();                
+                break;
+        }
+
+        $seasonControl = $dataAccess->ReadSeasonDataFromDB("worlds");
+
+        if($dataAccess::GetDBParams('histoical') === true)
+        {
+            $locationArray = $dataAccess->ReadLocationDataFromDB('locs', 2);
+        }
+        else
+        {
+            $locationArray = $dataAccess->ReadLocationDataFromDB("locs");
+        }
+
+        $initialDayStage = $seasonControl->GetDayStage();
+
+        for($i = $initialDayStage; $i < 8; $i++)
+        {
+            $dayStage = array_search($initialDayStage, daystage); // refactor this
+            echo "\n*** LOCATION BLOCK ***";
+            echo "\nDay Stage: {$dayStage}";
+        
+            echo "\nLocations:\n\n";        
+            
+            foreach($locationArray as $newLocation)
+            {
+                if($this->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage) == true)
+                {                
+                    echo $newLocation . "\n-------\n";
+
+                    $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                    echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
+                }            
+            }
+            $initialDayStage++;
+        }
+
+        $seasonControl->SetDayStage(0);
+        $seasonControl->Tick();
+
+        $dataAccess->UpdateSeasonDataToDB($seasonControl, 'worlds');
+        $dataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
+        if($dataAccess::GetDBParams('historical') === true)
+        {
+            $dataAccess->WriteLocationsToDB($locationArray, 'test');
+        }
+    }
+
+    /**
+     * @param int $option 1 = SQLITE - - - 2 = MYSQL
+     * @param int $daysToRun Amount of days to run
+     * 
+     * @return [type]
+     */
+    public function RunDays(int $option, int $daysToRun = 1)
+    {        
+        $locationArray = '';
+        $seasonControl = '';
+        $dataAccess = '';        
+
+        switch($option)
+        {
+            case 1: // SQLITE
+                WeatherSystemSQLiteDataAccess::SetDBPath("WeatherTest.db"); // Setting the database we're gonna work with.
+                $dataAccess = new WeatherSystemSQLiteDataAccess();        
+                break;
+            case 2: // MYSQL
+                WeatherSystemDataAccess::SetDBParams('localhost:3306', 'root', '' ,'weather_test');
+                $dataAccess = new WeatherSystemDataAccess();                
+                break;
+        }
+
+        $seasonControl = $dataAccess->ReadSeasonDataFromDB("worlds");
+
+        if($dataAccess::GetDBParams('histoical') === true)
+        {
+            $locationArray = $dataAccess->ReadLocationDataFromDB('locs', 2);
+        }
+        else
+        {
+            $locationArray = $dataAccess->ReadLocationDataFromDB("locs");
+        }
+
+        $initialDayStage = $seasonControl->GetDayStage();
+
+        for($i = 0; $i < $daysToRun; $i ++)
+        {
+            for($j = 0; $j < 8; $j ++)
+            {
+                $dayStage = array_search($initialDayStage, daystage); // refactor this
+                echo "\n*** LOCATION BLOCK ***";
+                echo "\nDay Stage: {$dayStage}";
+            
+                echo "\nLocations:\n\n";        
+                
+                foreach($locationArray as $newLocation)
+                {
+                    if($this->ExecuteWeatherTick($seasonControl->GetDay(), $newLocation, $dayStage) == true)
+                    {                
+                        echo $newLocation . "\n-------\n";
+
+                        $totalLiquids = ($newLocation->__get('clouds') + $newLocation->__get('localWater') + $newLocation->__get('waterVapor'));
+                        echo "\nTOTAL LIQUIDS: {$totalLiquids}\n\n";
+                    }            
+                }
+
+                if($initialDayStage + 1 <= 7)
+                {
+                    $initialDayStage++;
+                }
+                else
+                {
+                    $initialDayStage = 0;
+                    $seasonControl->Tick();
+                }
+            }
+        }
+
+        $dataAccess->UpdateSeasonDataToDB($seasonControl, 'worlds');
+        $dataAccess->UpdateAllLocationsAtDB($locationArray, 'locs');
+        if($dataAccess::GetDBParams('historical') === true)
+        {
+            $dataAccess->WriteLocationsToDB($locationArray, 'test');
+        }
+    }
     #endregion
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 }

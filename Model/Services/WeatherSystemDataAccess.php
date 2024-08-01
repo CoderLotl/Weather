@@ -95,7 +95,7 @@ class WeatherSystemDataAccess
 
         try
         {  
-            $statement = $pdo->prepare("SELECT season_day, season_direction FROM {$table}");
+            $statement = $pdo->prepare("SELECT season_day, season_direction, day_stage FROM {$table}");
             $statement->execute();
             $data = $statement->fetch(PDO::FETCH_ASSOC);
 
@@ -111,6 +111,8 @@ class WeatherSystemDataAccess
                 {
                     $seasonControl->SetGoingForward(true);
                 }
+
+                $seasonControl->SetDayStage($data['day_stage']);
 
                 echo "\nSeaconControl created successfully.\n";
                 
@@ -144,9 +146,10 @@ class WeatherSystemDataAccess
             else
             {
                 $goingForward = 1;
-            }        
+            }
+            $dayStage = $seasonControl->GetDayStage();        
     
-            $query = "UPDATE {$table} SET season_day = {$day}, season_direction = {$goingForward}";
+            $query = "UPDATE {$table} SET season_day = {$day}, season_direction = {$goingForward}, day_stage = {$dayStage}";
     
             $statement = $pdo->prepare($query);            
             $statement->execute();

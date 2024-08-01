@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////
 // - - - - - SEASON CONTROL CONFIG
 define('cycle', 168); // The cycle represents the amount of days a whole cycle has. The number MUST be divisible by 4.
-define('season_length', (cycle / 4)); // The length of a current season.
+define('season_length', (cycle / 4)); // The length of a current season, which is 1/4 of the year cycle.
 define('time_divider', (season_length / 7));
 define('seasons',
     [
@@ -21,7 +21,7 @@ define('seasons',
 
 // Machine MAIN Control
 define('applyTemperature', true); // If set to false, no temperature calculation will be executed (and therefore no weather too).
-define('applyWeather', true); // If set to false, no weather calculations will be executed.
+define('applyWeather', true); // If set to false, no weather calculations will be executed, so the weather will stay the same.
 
 // Chances Control
 define('blowingWindChances', 35); // The chances of some 'wind' actually returning some water to the ground without actual rain.
@@ -46,7 +46,7 @@ define('placesWithNoRain',
 define('placesWithNoWind',
     [
         1, // plains/meadows
-        2, // juntle
+        2, // jungle
         3, // woods/forest
         5, // mountains
         6, // swamp

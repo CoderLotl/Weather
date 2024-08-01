@@ -7,11 +7,13 @@ class SeasonControl
     // - - - ATTRIBUTES
     private $day;
     private $goingForward;
+    private $dayStage;
 
     public function __construct()
     {
         $this->day = 0;
         $this->goingForward = true;
+        $this->dayStage = 0;
     }
 
     // - - - PROPERTIES
@@ -30,6 +32,16 @@ class SeasonControl
     public function SetGoingForward(bool $value)
     {
         $this->goingForward = $value;
+    }
+
+    public function GetDayStage()
+    {
+        return $this->dayStage;
+    }
+
+    public function SetDayStage(int $dayStage)
+    {
+        $this->dayStage = $dayStage;
     }
 
     private function UpdateDay(int $amountOfDays)
@@ -112,6 +124,20 @@ class SeasonControl
         $previousDay = $this->day;
         $this->UpdateDay(1);
         echo 'Previous day: ' . $previousDay . "\nDay: " . $this->day . ' | Is moving towards: ' . ($this->goingForward ? 'Summer peak' : 'Winter peak') . "\n";        
+    }
+
+    public function DayStageTick()
+    {
+        $previousDay = $this->day;
+        if($this->dayStage + 1 > 7)
+        {
+            $this->dayStage = 0;
+            $this->day = $previousDay + 1;
+        }
+        else
+        {
+            $this->dayStage += 1;
+        }
     }
 
     public function CustomTick(int $amountOfDays)
