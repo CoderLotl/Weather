@@ -485,7 +485,7 @@ class WeatherMachine
      */
     private function CastSomeRain(Location $location)
     {
-        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * precipitationFactor / 100);
+        $returningWater = ($location->__get("clouds") * precipitationFactor / 100);
         
         $location->__set('weather', $this->CalculateRainIntensity($returningWater));
 
@@ -562,7 +562,7 @@ class WeatherMachine
      */
     private function BlowSomeWind(Location $location)
     {
-        $returningWater = $location->__get("clouds") - ($location->__get("clouds") * blowingWindReturn / 100);
+        $returningWater = $location->__get("clouds") * blowingWindReturn / 100;
         echo "\nWater moved by the winds: " . $returningWater;
         echo "\nCurrent clouds: " . $location->__get("clouds") . " | Current water: " . $location->__get("localWater");
         $location->__set("localWater", $location->__get("localWater") + $returningWater);
